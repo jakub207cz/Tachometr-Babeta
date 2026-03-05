@@ -38,10 +38,25 @@ export async function requestBLEPermissions(): Promise<boolean> {
   }
 
   try {
-    // For Android 12+, we need BLUETOOTH_SCAN and BLUETOOTH_CONNECT
-    // These are handled by expo-modules, but we ensure the app has declared them
-    // The actual permission request happens when the user tries to scan
-    return true;
+    const { PermissionsAndroid } = require("react-native");
+
+    // Android 12+ requires explicit runtime permissions for BLE
+    if (Platform.Version >= 31) {
+      const granted = await PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+        PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+      ]);
+      return (
+        granted["android.permission.BLUETOOTH_SCAN"] === PermissionsAndroid.RESULTS.GRANTED &&
+        granted["android.permission.BLUETOOTH_CONNECT"] === PermissionsAndroid.RESULTS.GRANTED
+      );
+    } else {
+      // Android 11 and lower requires location for BLE scanning
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    }
   } catch (error) {
     console.error("BLE permission error:", error);
     return false;

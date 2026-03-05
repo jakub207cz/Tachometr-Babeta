@@ -233,7 +233,7 @@ function OSMMapViewComponent({ latitude, longitude, route, autoFollow, onMapInte
       } else if (msg.type === "autoFollowResume") {
         setIsUserInteracting(false);
       }
-    } catch {}
+    } catch { }
   };
 
   if (Platform.OS === "web") {
@@ -244,13 +244,27 @@ function OSMMapViewComponent({ latitude, longitude, route, autoFollow, onMapInte
     );
   }
 
-  const initialLat = latitude ?? 48.8566;
-  const initialLon = longitude ?? 2.3522;
+  // Ensure the initial HTML is generated only once using the first valid coordinates
+  // so the WebView doesn't completely reload its source on every GPS tick.
+  const initialLatRef = useRef<number>(latitude ?? 48.8566);
+  const initialLonRef = useRef<number>(longitude ?? 2.3522);
+
+  if (latitude && initialLatRef.current === 48.8566) {
+    initialLatRef.current = latitude;
+  }
+  if (longitude && initialLonRef.current === 2.3522) {
+    initialLonRef.current = longitude;
+  }
+
+  const mapSourceHtml = useMemo(
+    () => buildMapHTML(initialLatRef.current, initialLonRef.current),
+    []
+  );
 
   return (
     <WebView
       ref={webViewRef}
-      source={{ html: buildMapHTML(initialLat, initialLon) }}
+      source={{ html: mapSourceHtml }}
       style={styles.map}
       onLoad={handleLoad}
       onMessage={handleMessage}
