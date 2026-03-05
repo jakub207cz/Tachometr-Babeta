@@ -144,8 +144,8 @@ const config: ExpoConfig = {
           minSdkVersion: 24,
           usesCleartextTraffic: true,
           // Ensure Bluetooth permissions are properly declared
-          compileSdkVersion: 34,
-          targetSdkVersion: 34,
+          compileSdkVersion: 35,
+          targetSdkVersion: 35,
         },
       },
     ],
