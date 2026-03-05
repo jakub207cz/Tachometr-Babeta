@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useRef, useCallback } from "react";
 import { Platform } from "react-native";
 import * as Location from "expo-location";
+import { requestBLEPermissions } from "@/utils/permissions";
 
 export interface BLEDevice {
   id: string;
@@ -26,10 +27,10 @@ const BLEContext = createContext<BLEContextType>({
   connectionState: "idle",
   connectedDevice: null,
   errorMessage: null,
-  startScan: async () => {},
-  stopScan: () => {},
-  connectToDevice: async () => {},
-  disconnect: () => {},
+  startScan: async () => { },
+  stopScan: () => { },
+  connectToDevice: async () => { },
+  disconnect: () => { },
 });
 
 export function BLEProvider({ children }: { children: React.ReactNode }) {
@@ -102,6 +103,13 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
     const locationGranted = await requestLocationPermission();
     if (!locationGranted) {
       setErrorMessage("Location permission required for Bluetooth scanning.");
+      return false;
+    }
+
+    // Request BLE runtime permissions for Android 12+
+    const bleGranted = await requestBLEPermissions();
+    if (!bleGranted) {
+      setErrorMessage("Bluetooth permissions are required to scan for devices.");
       return false;
     }
 
@@ -212,7 +220,7 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
     const manager = getBLEManager();
     if (manager && connectedDevice) {
       try {
-        manager.cancelDeviceConnection(connectedDevice.id).catch(() => {});
+        manager.cancelDeviceConnection(connectedDevice.id).catch(() => { });
       } catch (e) {
         console.warn("BLE disconnect error:", e);
       }

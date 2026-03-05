@@ -213,10 +213,11 @@ function OSMMapViewComponent({ latitude, longitude, route, autoFollow, onMapInte
   // Update auto-follow state
   useEffect(() => {
     execJS(`setAutoFollow(${autoFollow})`);
-    if (autoFollow && latitude != null && longitude != null && !isUserInteracting) {
+    if (autoFollow && latitude != null && longitude != null) {
+      setIsUserInteracting(false); // Manually override the WebView's interaction lock
       execJS(`recenter(${latitude}, ${longitude})`);
     }
-  }, [autoFollow, latitude, longitude, isUserInteracting, execJS]);
+  }, [autoFollow, latitude, longitude, execJS]);
 
   const handleLoad = () => {
     isLoadedRef.current = true;
