@@ -282,11 +282,18 @@ function OSMMapViewComponent({ latitude, longitude, route, autoFollow, onMapInte
 // Memoize to prevent re-renders unless props actually change
 export const OSMMapView = React.memo(OSMMapViewComponent, (prevProps, nextProps) => {
   // Return true if props are equal (no re-render), false if different (re-render)
+  const routeIsEqual =
+    prevProps.route.length === nextProps.route.length &&
+    prevProps.route.every((point, i) =>
+      point.latitude === nextProps.route[i].latitude &&
+      point.longitude === nextProps.route[i].longitude
+    );
+
   return (
     prevProps.latitude === nextProps.latitude &&
     prevProps.longitude === nextProps.longitude &&
     prevProps.autoFollow === nextProps.autoFollow &&
-    prevProps.route === nextProps.route &&
+    routeIsEqual &&
     prevProps.onMapInteraction === nextProps.onMapInteraction
   );
 });
