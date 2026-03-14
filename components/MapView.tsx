@@ -8,6 +8,7 @@ interface MapViewProps {
   longitude: number | null;
   route: RoutePoint[];
   autoFollow: boolean;
+  zoomLevel: number;
   onMapInteraction: () => void;
 }
 
@@ -41,9 +42,10 @@ function buildMapHTML(lat: number, lon: number): string {
 <body>
 <div id="map"></div>
 <script>
+  var currentZoom = 15;
   var map = L.map('map', {
     center: [${lat}, ${lon}],
-    zoom: 15,
+    zoom: currentZoom,
     zoomControl: false,
     attributionControl: false
   });
@@ -93,12 +95,21 @@ function buildMapHTML(lat: number, lon: number): string {
     }, 10000);
   });
 
+  function setZoomLevel(level) {
+    if (currentZoom !== level) {
+        currentZoom = level;
+        if (autoFollow && !isUserInteracting) {
+            map.setZoom(level, { animate: true, duration: 1.0 });
+        }
+    }
+  }
+
   // Smooth camera transition with animation (only update marker, not entire map)
   function updatePosition(lat, lon) {
     userMarker.setLatLng([lat, lon]);
     if (autoFollow && !isUserInteracting) {
       // Smooth animation: 500ms duration
-      map.setView([lat, lon], map.getZoom(), { animate: true, duration: 0.5 });
+      map.setView([lat, lon], currentZoom, { animate: true, duration: 0.5 });
     }
   }
 
@@ -147,7 +158,7 @@ function buildMapHTML(lat: number, lon: number): string {
     autoFollow = true;
     clearTimeout(interactionTimer);
     // 1-second smooth animation
-    map.setView([lat, lon], 15, { animate: true, duration: 1.0 });
+    map.setView([lat, lon], currentZoom, { animate: true, duration: 1.0 });
   }
 
   // Check if user is currently interacting
@@ -161,6 +172,7 @@ function buildMapHTML(lat: number, lon: number): string {
   window.setDestination = setDestination;
   window.clearRoute = clearRoute;
   window.recenter = recenter;
+  window.setZoomLevel = setZoomLevel;
   window.setAutoFollow = function(val) { autoFollow = val; };
   window.getIsUserInteracting = getIsUserInteracting;
 </script>
@@ -168,7 +180,7 @@ function buildMapHTML(lat: number, lon: number): string {
 </html>`;
 }
 
-function OSMMapViewComponent({ latitude, longitude, route, autoFollow, onMapInteraction }: MapViewProps) {
+function OSMMapViewComponent({ latitude, longitude, route, autoFollow, zoomLevel, onMapInteraction }: MapViewProps) {
   const webViewRef = useRef<WebView>(null);
   const isLoadedRef = useRef(false);
   const pendingUpdatesRef = useRef<Array<() => void>>([]);
@@ -184,6 +196,11 @@ function OSMMapViewComponent({ latitude, longitude, route, autoFollow, onMapInte
       });
     }
   }, []);
+
+  // Update zoom level dynamically
+  useEffect(() => {
+    execJS(`setZoomLevel(${zoomLevel})`);
+  }, [zoomLevel, execJS]);
 
   // Update user position (NEVER clears route) — only marker moves
   useEffect(() => {

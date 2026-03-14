@@ -45,11 +45,12 @@ export default function DashboardScreen() {
 
   const router = useRouter();
   const { mode } = useAppMode();
-  const { location } = useLocation();
+  const { location, maxSpeed } = useLocation();
   const { connectedDevice, connectionState: bleState } = useBLE();
-  const { route, distanceMeters, durationSeconds, isNavigating, setDestination, fetchRoute, clearNavigation } = useNavigation();
+  const { route, distanceMeters, durationSeconds, routeMaxSpeed, isNavigating, setDestination, fetchRoute, clearNavigation } = useNavigation();
 
   const [autoFollow, setAutoFollow] = useState(true);
+  const [mapZoom, setMapZoom] = useState(15);
   const [showRecenter, setShowRecenter] = useState(false);
   const { setTimer: setAutoFollowTimer, clearTimer: clearAutoFollowTimer, resetTimer: resetAutoFollowTimer } = useSafeTimer();
 
@@ -128,8 +129,62 @@ export default function DashboardScreen() {
   useEffect(() => {
     if (isNavigating && location) {
       updateNavigationProgress(location);
+
+      if (route.length > 2) {
+        import("@turf/helpers").then((turfHelpers) => {
+           import("@turf/distance").then((turfDistance) => {
+              import("@turf/rhumb-bearing").then((turfBearing) => {
+                  import("@turf/nearest-point-on-line").then((turfNearest) => {
+                      try {
+                        const userPoint = turfHelpers.point([location.longitude, location.latitude]);
+                        const routeLine = turfHelpers.lineString(route.map(p => [p.longitude, p.latitude]));
+                        const snapped = turfNearest.default(routeLine, userPoint);
+                        const currentIndex = snapped.properties.index || 0;
+
+                        let distToNextTurn = 0;
+                        let foundTurn = false;
+                        
+                        // Look ahead up to 20 points or end of route to find a sharp turn
+                        const lookaheadEnd = Math.min(currentIndex + 20, route.length - 2);
+                        
+                        for (let i = currentIndex; i < lookaheadEnd; i++) {
+                            const p1 = turfHelpers.point([route[i].longitude, route[i].latitude]);
+                            const p2 = turfHelpers.point([route[i+1].longitude, route[i+1].latitude]);
+                            const p3 = turfHelpers.point([route[i+2].longitude, route[i+2].latitude]);
+                            
+                            distToNextTurn += turfDistance.default(p1, p2, { units: "kilometers" }) * 1000;
+                            
+                            const bearing1 = turfBearing.default(p1, p2);
+                            const bearing2 = turfBearing.default(p2, p3);
+                            
+                            // Calculate angle difference (handle 360 wrap)
+                            let angleDiff = Math.abs(bearing1 - bearing2);
+                            if (angleDiff > 180) angleDiff = 360 - angleDiff;
+                            
+                            if (angleDiff > 30) {
+                                foundTurn = true;
+                                break;
+                            }
+                        }
+
+                        // Smart Zoom Logic
+                        if (foundTurn && distToNextTurn < 100) {
+                            setMapZoom(18); // Zoom in for the turn
+                        } else {
+                            setMapZoom(15); // Zoom out for straight paths
+                        }
+                      } catch (e) {
+                         // silently fallback
+                      }
+                  });
+              });
+           });
+        });
+      }
+    } else {
+        setMapZoom(15);
     }
-  }, [isNavigating, location, updateNavigationProgress]);
+  }, [isNavigating, location, route, updateNavigationProgress]);
 
   const speed = location?.speed ?? 0;
 
@@ -148,6 +203,18 @@ export default function DashboardScreen() {
               {isBLEMode ? "BLE" : "GPS"}
             </Text>
           </View>
+        </View>
+
+        {/* ── Max Speed Bar (New) ── */}
+        <View style={styles.maxSpeedBar}>
+           <Text style={styles.maxSpeedText}>
+               <Text style={styles.maxSpeedLabel}>TRIP MAX: </Text>
+               {Math.round(routeMaxSpeed)} km/h
+           </Text>
+           <Text style={styles.maxSpeedText}>
+               <Text style={styles.maxSpeedLabel}>ALL-TIME MAX: </Text>
+               {Math.round(maxSpeed)} km/h
+           </Text>
         </View>
 
         {/* ── Top 30%: Speedometer ── */}
@@ -195,6 +262,7 @@ export default function DashboardScreen() {
             longitude={location?.longitude ?? null}
             route={route}
             autoFollow={autoFollow}
+            zoomLevel={mapZoom}
             onMapInteraction={handleMapInteraction}
           />
 
@@ -259,6 +327,29 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 1.5,
+  },
+
+  // Max Speed Bar
+  maxSpeedBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    backgroundColor: "#0D0D0D",
+    borderBottomWidth: 1,
+    borderBottomColor: "#1C2A35",
+  },
+  maxSpeedText: {
+    color: "#ECEDEE",
+    fontSize: 12,
+    fontWeight: "700",
+    fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace",
+  },
+  maxSpeedLabel: {
+    color: "#6B7280",
+    fontSize: 10,
+    fontWeight: "600",
+    fontFamily: Platform.OS === "ios" ? "System" : "sans-serif",
   },
 
   // Speedometer — top 30%

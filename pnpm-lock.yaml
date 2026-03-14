@@ -47,6 +47,9 @@ importers:
       '@turf/point-to-line-distance':
         specifier: ^7.3.4
         version: 7.3.4
+      '@turf/rhumb-bearing':
+        specifier: ^7.3.4
+        version: 7.3.4
       axios:
         specifier: ^1.13.2
         version: 1.13.2

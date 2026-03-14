@@ -13,6 +13,7 @@ export interface LocationData {
 
 interface LocationContextType {
   location: LocationData | null;
+  maxSpeed: number; // Global maximum speed (km/h) across the entire session
   permissionGranted: boolean;
   requestPermission: () => Promise<boolean>;
   updateFromBLE: (lat: number, lon: number, speed: number) => void;
@@ -20,6 +21,7 @@ interface LocationContextType {
 
 const LocationContext = createContext<LocationContextType>({
   location: null,
+  maxSpeed: 0,
   permissionGranted: false,
   requestPermission: async () => false,
   updateFromBLE: () => {},
@@ -27,6 +29,7 @@ const LocationContext = createContext<LocationContextType>({
 
 export function LocationProvider({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useState<LocationData | null>(null);
+  const [maxSpeed, setMaxSpeed] = useState<number>(0);
   const [permissionGranted, setPermissionGranted] = useState(false);
   const { mode } = useAppMode();
   const watcherRef = useRef<Location.LocationSubscription | null>(null);
@@ -44,6 +47,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
 
   const updateFromBLE = (lat: number, lon: number, speed: number) => {
     setLocation({ latitude: lat, longitude: lon, speed });
+    setMaxSpeed((prev) => Math.max(prev, speed));
   };
 
   useEffect(() => {
@@ -93,13 +97,15 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
         (loc) => {
           if (!active) return;
           const speedMs = loc.coords.speed ?? 0;
+          const newSpeed = Math.max(0, speedMs * 3.6); // m/s → km/h
           setLocation({
             latitude: loc.coords.latitude,
             longitude: loc.coords.longitude,
-            speed: Math.max(0, speedMs * 3.6), // m/s → km/h
+            speed: newSpeed,
             accuracy: loc.coords.accuracy != null ? loc.coords.accuracy : undefined,
             heading: loc.coords.heading != null ? loc.coords.heading : undefined,
           });
+          setMaxSpeed((prev) => Math.max(prev, newSpeed));
         }
       );
     };
@@ -116,7 +122,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
   }, [mode]);
 
   return (
-    <LocationContext.Provider value={{ location, permissionGranted, requestPermission, updateFromBLE }}>
+    <LocationContext.Provider value={{ location, maxSpeed, permissionGranted, requestPermission, updateFromBLE }}>
       {children}
     </LocationContext.Provider>
   );
