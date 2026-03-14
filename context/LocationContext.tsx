@@ -73,10 +73,13 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
             (pos) => {
               if (!active) return;
               const speedMs = pos.coords.speed ?? 0;
+              let newSpeed = Math.max(0, speedMs * 3.6); // m/s → km/h
+              if (newSpeed < 3.5) newSpeed = 0; // Filter GPS noise
+              
               setLocation({
                 latitude: pos.coords.latitude,
                 longitude: pos.coords.longitude,
-                speed: Math.max(0, speedMs * 3.6), // m/s → km/h
+                speed: newSpeed,
                 accuracy: pos.coords.accuracy,
                 heading: pos.coords.heading != null ? pos.coords.heading : undefined,
               });
@@ -97,7 +100,9 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
         (loc) => {
           if (!active) return;
           const speedMs = loc.coords.speed ?? 0;
-          const newSpeed = Math.max(0, speedMs * 3.6); // m/s → km/h
+          let newSpeed = Math.max(0, speedMs * 3.6); // m/s → km/h
+          if (newSpeed < 3.5) newSpeed = 0; // Filter GPS noise
+          
           setLocation({
             latitude: loc.coords.latitude,
             longitude: loc.coords.longitude,

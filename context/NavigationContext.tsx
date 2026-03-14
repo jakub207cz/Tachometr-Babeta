@@ -137,8 +137,9 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
         // Calculate distance from user to the route line (in km, converted to meters)
         const distanceToRouteMeters = pointToLineDistance(userPoint, routeLine, { units: "kilometers" }) * 1000;
 
-        // If off-route by > 50 meters, trigger recalculation (debounced to once every 1 second)
-        if (distanceToRouteMeters > 50) {
+        // If off-route by > 50 meters AND moving, trigger recalculation (debounced to once every 1 second)
+        // This prevents immediate recalculations on startup due to GPS noise/drift
+        if (distanceToRouteMeters > 50 && location.speed > 0) {
           const now = Date.now();
           if (now - lastRecalculationRef.current > 1000) {
             lastRecalculationRef.current = now;
@@ -179,18 +180,9 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
         if (prevState.baselineDurationSeconds != null && prevState.initialRouteDistanceMeters != null && prevState.initialRouteDistanceMeters > 0) {
             const progressPercentage = Math.max(0, Math.min(1, remainingDistanceMeters / prevState.initialRouteDistanceMeters));
             
-            // Baseline remaining time (if driving exactly as OSRM predicted)
-            const baselineRemainingSeconds = prevState.baselineDurationSeconds * progressPercentage;
-            
-            if (location.speed < 2) {
-              // If stopped, keep ETA roughly the same (or let it slowly tick down if we wanted, but keeping it static is standard)
-              newDurationSeconds = prevState.durationSeconds; // Frozen ETA when stopped
-            } else {
-              // Only update ETA significantly if moving. Blend the baseline with momentary speed.
-              const momentarySeconds = remainingDistanceMeters / (Math.max(5, location.speed) / 3.6);
-              // Smoothing formula: 70% baseline proportional time, 30% momentary time
-              newDurationSeconds = (baselineRemainingSeconds * 0.7) + (momentarySeconds * 0.3);
-            }
+            // Baseline remaining time based pureley on distance covered
+            // This is completely stable and will not jump when speeding up or slowing down
+            newDurationSeconds = prevState.baselineDurationSeconds * progressPercentage;
         }
 
         // Update Max Speed for this route
