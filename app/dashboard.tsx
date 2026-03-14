@@ -123,6 +123,14 @@ export default function DashboardScreen() {
     };
   }, [clearAutoFollowTimer]);
 
+  const { updateNavigationProgress } = useNavigation();
+
+  useEffect(() => {
+    if (isNavigating && location) {
+      updateNavigationProgress(location);
+    }
+  }, [isNavigating, location, updateNavigationProgress]);
+
   const speed = location?.speed ?? 0;
 
   return (

@@ -1,4 +1,9 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useRef } from "react";
+import * as turf from "@turf/helpers";
+import distance from "@turf/distance";
+import pointToLineDistance from "@turf/point-to-line-distance";
+import nearestPointOnLine from "@turf/nearest-point-on-line";
+import { LocationData } from "./LocationContext";
 
 export interface RoutePoint {
   latitude: number;
@@ -18,6 +23,7 @@ interface NavigationContextType extends NavigationState {
   setDestination: (point: RoutePoint, name: string) => void;
   fetchRoute: (from: RoutePoint, to: RoutePoint) => Promise<void>;
   clearNavigation: () => void;
+  updateNavigationProgress: (location: LocationData) => void;
 }
 
 const defaultState: NavigationState = {
@@ -34,6 +40,7 @@ const NavigationContext = createContext<NavigationContextType>({
   setDestination: () => {},
   fetchRoute: async () => {},
   clearNavigation: () => {},
+  updateNavigationProgress: () => {},
 });
 
 // Decode OSRM polyline (encoded polyline algorithm)
@@ -72,6 +79,9 @@ function decodePolyline(encoded: string): RoutePoint[] {
 
 export function NavigationProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<NavigationState>(defaultState);
+  
+  // Track last recalculation time to prevent API spam
+  const lastRecalculationRef = useRef<number>(0);
 
   const setDestination = useCallback((point: RoutePoint, name: string) => {
     setState((prev) => ({ ...prev, destination: point, destinationName: name }));
@@ -105,12 +115,91 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
     }
   }, []);
 
+  const updateNavigationProgress = useCallback(
+    (location: LocationData) => {
+      setState((prevState) => {
+        if (!prevState.isNavigating || !prevState.destination || prevState.route.length < 2) {
+          return prevState;
+        }
+
+        const userPoint = turf.point([location.longitude, location.latitude]);
+        const routeLine = turf.lineString(prevState.route.map((p) => [p.longitude, p.latitude]));
+
+        // Calculate distance from user to the route line (in km, converted to meters)
+        const distanceToRouteMeters = pointToLineDistance(userPoint, routeLine, { units: "kilometers" }) * 1000;
+
+        // If off-route by > 50 meters, trigger recalculation (debounced to once every 10 seconds)
+        if (distanceToRouteMeters > 50) {
+          const now = Date.now();
+          if (now - lastRecalculationRef.current > 10000) {
+            lastRecalculationRef.current = now;
+            // Fire async fetchRoute without awaiting to avoid blocking state update
+            fetchRoute(
+              { latitude: location.latitude, longitude: location.longitude },
+              prevState.destination
+            );
+          }
+          return prevState;
+        }
+
+        // Snap user to the nearest point on the route
+        const snappedPoint = nearestPointOnLine(routeLine, userPoint);
+        
+        // Calculate remaining distance from snapped point to the end of the route
+        const destinationPoint = turf.point([prevState.destination.longitude, prevState.destination.latitude]);
+        
+        // Find index of snapped point to only calculate distance along remaining path
+        const snappedIndex = snappedPoint.properties.index || 0;
+        
+        // Create remaining path from snapped point to destination
+        let remainingDistanceMeters = 0;
+        
+        if (snappedIndex < prevState.route.length - 1) {
+            const nextPoint = turf.point([prevState.route[snappedIndex + 1].longitude, prevState.route[snappedIndex + 1].latitude]);
+            remainingDistanceMeters += distance(snappedPoint, nextPoint, { units: "kilometers" }) * 1000;
+            
+            for (let i = snappedIndex + 1; i < prevState.route.length - 1; i++) {
+                const pt1 = turf.point([prevState.route[i].longitude, prevState.route[i].latitude]);
+                const pt2 = turf.point([prevState.route[i + 1].longitude, prevState.route[i + 1].latitude]);
+                remainingDistanceMeters += distance(pt1, pt2, { units: "kilometers" }) * 1000;
+            }
+        }
+
+        // Average moped speed assumption for ETA if actual speed is too low/zero
+        const speedKmh = location.speed > 5 ? location.speed : 30; // Min 30 km/h assumed for ETA if standing still
+        const speedMs = speedKmh / 3.6;
+        const newDurationSeconds = remainingDistanceMeters / speedMs;
+        
+        // Auto-stop navigation if within 20 meters of destination
+        if (remainingDistanceMeters < 20) {
+            return {
+              ...defaultState,
+              destination: null,
+              destinationName: null,
+              route: [],
+              distanceMeters: null,
+              durationSeconds: null,
+              isNavigating: false,
+            };
+        }
+
+        return {
+          ...prevState,
+          distanceMeters: remainingDistanceMeters,
+          durationSeconds: newDurationSeconds,
+        };
+      });
+    },
+    [fetchRoute]
+  );
+
+
   const clearNavigation = useCallback(() => {
     setState(defaultState);
   }, []);
 
   return (
-    <NavigationContext.Provider value={{ ...state, setDestination, fetchRoute, clearNavigation }}>
+    <NavigationContext.Provider value={{ ...state, setDestination, fetchRoute, clearNavigation, updateNavigationProgress }}>
       {children}
     </NavigationContext.Provider>
   );
