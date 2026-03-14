@@ -33,6 +33,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
   const [permissionGranted, setPermissionGranted] = useState(false);
   const { mode } = useAppMode();
   const watcherRef = useRef<Location.LocationSubscription | null>(null);
+  const lastPosRef = useRef<{ lat: number; lon: number; time: number } | null>(null);
 
   const requestPermission = async (): Promise<boolean> => {
     if (Platform.OS === "web") {
@@ -62,6 +63,76 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
 
     let active = true;
 
+    const processLocation = (
+        lat: number, 
+        lon: number, 
+        rawSpeed: number, 
+        accuracy?: number | null, 
+        heading?: number | null
+    ) => {
+        const now = Date.now();
+        let finalSpeed = Math.max(0, rawSpeed * 3.6); // km/h
+        
+        // Advanced GPS Drift Filter
+        // If accuracy is terrible, don't trust the speed
+        if (accuracy && accuracy > 30) {
+            finalSpeed = 0;
+        } else if (lastPosRef.current) {
+            import("@turf/helpers").then(turfHelpers => {
+                import("@turf/distance").then(turfDistance => {
+                    const p1 = turfHelpers.point([lastPosRef.current!.lon, lastPosRef.current!.lat]);
+                    const p2 = turfHelpers.point([lon, lat]);
+                    // Distance in meters
+                    const distMeters = turfDistance.default(p1, p2, { units: "kilometers" }) * 1000;
+                    const timeDiffSec = (now - lastPosRef.current!.time) / 1000;
+                    
+                    if (timeDiffSec > 0) {
+                        // Calculate real physical speed from distance and time
+                        const calculatedSpeedKmh = (distMeters / timeDiffSec) * 3.6;
+                        
+                        // If the OS reports we are moving e.g. 4 km/h, but physically 
+                        // the coordinates only moved 0.5 meters in 2 seconds, it's just GPS drift.
+                        // We force speed to 0. But if we physically moved 2 meters (e.g. 7 km/h calculated 
+                        // or walking), we allow the low speed.
+                        if (calculatedSpeedKmh < 1.0 || (finalSpeed > 0 && distMeters < 1.0)) {
+                           finalSpeed = 0;
+                        }
+                    }
+
+                    if (active) {
+                        setLocation({
+                            latitude: lat,
+                            longitude: lon,
+                            speed: finalSpeed,
+                            accuracy: accuracy != null ? accuracy : undefined,
+                            heading: heading != null ? heading : undefined,
+                        });
+                        if (finalSpeed > 0) {
+                            setMaxSpeed((prev) => Math.max(prev, finalSpeed));
+                        }
+                        lastPosRef.current = { lat, lon, time: now };
+                    }
+                });
+            });
+            return; // State update is handled async inside turf promise
+        }
+
+        // First location update
+        if (active) {
+            setLocation({
+                latitude: lat,
+                longitude: lon,
+                speed: finalSpeed,
+                accuracy: accuracy != null ? accuracy : undefined,
+                heading: heading != null ? heading : undefined,
+            });
+            if (finalSpeed > 0) {
+                setMaxSpeed((prev) => Math.max(prev, finalSpeed));
+            }
+            lastPosRef.current = { lat, lon, time: now };
+        }
+    };
+
     const startWatching = async () => {
       const granted = await requestPermission();
       if (!granted || !active) return;
@@ -72,17 +143,13 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
           navigator.geolocation.watchPosition(
             (pos) => {
               if (!active) return;
-              const speedMs = pos.coords.speed ?? 0;
-              let newSpeed = Math.max(0, speedMs * 3.6); // m/s → km/h
-              if (newSpeed < 3.5) newSpeed = 0; // Filter GPS noise
-              
-              setLocation({
-                latitude: pos.coords.latitude,
-                longitude: pos.coords.longitude,
-                speed: newSpeed,
-                accuracy: pos.coords.accuracy,
-                heading: pos.coords.heading != null ? pos.coords.heading : undefined,
-              });
+              processLocation(
+                  pos.coords.latitude, 
+                  pos.coords.longitude, 
+                  pos.coords.speed ?? 0, 
+                  pos.coords.accuracy, 
+                  pos.coords.heading
+              );
             },
             (err) => console.warn("Web geolocation error:", err),
             { enableHighAccuracy: true, maximumAge: 1000 }
@@ -99,18 +166,13 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
         },
         (loc) => {
           if (!active) return;
-          const speedMs = loc.coords.speed ?? 0;
-          let newSpeed = Math.max(0, speedMs * 3.6); // m/s → km/h
-          if (newSpeed < 3.5) newSpeed = 0; // Filter GPS noise
-          
-          setLocation({
-            latitude: loc.coords.latitude,
-            longitude: loc.coords.longitude,
-            speed: newSpeed,
-            accuracy: loc.coords.accuracy != null ? loc.coords.accuracy : undefined,
-            heading: loc.coords.heading != null ? loc.coords.heading : undefined,
-          });
-          setMaxSpeed((prev) => Math.max(prev, newSpeed));
+          processLocation(
+              loc.coords.latitude, 
+              loc.coords.longitude, 
+              loc.coords.speed ?? 0, 
+              loc.coords.accuracy, 
+              loc.coords.heading
+          );
         }
       );
     };
