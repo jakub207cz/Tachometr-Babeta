@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import * as Location from "expo-location";
 import { Platform } from "react-native";
 import { useAppMode } from "./AppModeContext";
@@ -46,10 +46,75 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
     return granted;
   };
 
-  const updateFromBLE = (lat: number, lon: number, speed: number) => {
-    setLocation({ latitude: lat, longitude: lon, speed });
-    setMaxSpeed((prev) => Math.max(prev, speed));
-  };
+  const processLocation = useCallback((
+      lat: number, 
+      lon: number, 
+      speedKmh: number, 
+      accuracy?: number | null, 
+      heading?: number | null
+  ) => {
+      const now = Date.now();
+      let finalSpeed = Math.max(0, speedKmh);
+      
+      // Advanced GPS Drift Filter
+      // If accuracy is terrible, don't trust the speed
+      if (accuracy && accuracy > 30) {
+          finalSpeed = 0;
+      } else if (lastPosRef.current) {
+          import("@turf/helpers").then(turfHelpers => {
+              import("@turf/distance").then(turfDistance => {
+                  const p1 = turfHelpers.point([lastPosRef.current!.lon, lastPosRef.current!.lat]);
+                  const p2 = turfHelpers.point([lon, lat]);
+                  // Distance in meters
+                  const distMeters = turfDistance.default(p1, p2, { units: "kilometers" }) * 1000;
+                  const timeDiffSec = (now - lastPosRef.current!.time) / 1000;
+                  
+                  if (timeDiffSec > 0) {
+                      // Calculate real physical speed from distance and time
+                      const calculatedSpeedKmh = (distMeters / timeDiffSec) * 3.6;
+                      
+                      // If the OS reports we are moving e.g. 4 km/h, but physically 
+                      // the coordinates only moved 0.5 meters in 2 seconds, it's just GPS drift.
+                      // We force speed to 0. But if we physically moved 2 meters (e.g. 7 km/h calculated 
+                      // or walking), we allow the low speed.
+                      if (calculatedSpeedKmh < 1.0 || (finalSpeed > 0 && distMeters < 1.0)) {
+                         finalSpeed = 0;
+                      }
+                  }
+
+                  setLocation({
+                      latitude: lat,
+                      longitude: lon,
+                      speed: finalSpeed,
+                      accuracy: accuracy != null ? accuracy : undefined,
+                      heading: heading != null ? heading : undefined,
+                  });
+                  if (finalSpeed > 0) {
+                      setMaxSpeed((prev) => Math.max(prev, finalSpeed));
+                  }
+                  lastPosRef.current = { lat, lon, time: now };
+              });
+          });
+          return;
+      }
+
+      // First location update
+      setLocation({
+          latitude: lat,
+          longitude: lon,
+          speed: finalSpeed,
+          accuracy: accuracy != null ? accuracy : undefined,
+          heading: heading != null ? heading : undefined,
+      });
+      if (finalSpeed > 0) {
+          setMaxSpeed((prev) => Math.max(prev, finalSpeed));
+      }
+      lastPosRef.current = { lat, lon, time: now };
+  }, []);
+
+  const updateFromBLE = useCallback((lat: number, lon: number, speed: number) => {
+      processLocation(lat, lon, speed);
+  }, [processLocation]);
 
   useEffect(() => {
     if (mode !== "standalone") {
@@ -62,76 +127,6 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
     }
 
     let active = true;
-
-    const processLocation = (
-        lat: number, 
-        lon: number, 
-        rawSpeed: number, 
-        accuracy?: number | null, 
-        heading?: number | null
-    ) => {
-        const now = Date.now();
-        let finalSpeed = Math.max(0, rawSpeed * 3.6); // km/h
-        
-        // Advanced GPS Drift Filter
-        // If accuracy is terrible, don't trust the speed
-        if (accuracy && accuracy > 30) {
-            finalSpeed = 0;
-        } else if (lastPosRef.current) {
-            import("@turf/helpers").then(turfHelpers => {
-                import("@turf/distance").then(turfDistance => {
-                    const p1 = turfHelpers.point([lastPosRef.current!.lon, lastPosRef.current!.lat]);
-                    const p2 = turfHelpers.point([lon, lat]);
-                    // Distance in meters
-                    const distMeters = turfDistance.default(p1, p2, { units: "kilometers" }) * 1000;
-                    const timeDiffSec = (now - lastPosRef.current!.time) / 1000;
-                    
-                    if (timeDiffSec > 0) {
-                        // Calculate real physical speed from distance and time
-                        const calculatedSpeedKmh = (distMeters / timeDiffSec) * 3.6;
-                        
-                        // If the OS reports we are moving e.g. 4 km/h, but physically 
-                        // the coordinates only moved 0.5 meters in 2 seconds, it's just GPS drift.
-                        // We force speed to 0. But if we physically moved 2 meters (e.g. 7 km/h calculated 
-                        // or walking), we allow the low speed.
-                        if (calculatedSpeedKmh < 1.0 || (finalSpeed > 0 && distMeters < 1.0)) {
-                           finalSpeed = 0;
-                        }
-                    }
-
-                    if (active) {
-                        setLocation({
-                            latitude: lat,
-                            longitude: lon,
-                            speed: finalSpeed,
-                            accuracy: accuracy != null ? accuracy : undefined,
-                            heading: heading != null ? heading : undefined,
-                        });
-                        if (finalSpeed > 0) {
-                            setMaxSpeed((prev) => Math.max(prev, finalSpeed));
-                        }
-                        lastPosRef.current = { lat, lon, time: now };
-                    }
-                });
-            });
-            return; // State update is handled async inside turf promise
-        }
-
-        // First location update
-        if (active) {
-            setLocation({
-                latitude: lat,
-                longitude: lon,
-                speed: finalSpeed,
-                accuracy: accuracy != null ? accuracy : undefined,
-                heading: heading != null ? heading : undefined,
-            });
-            if (finalSpeed > 0) {
-                setMaxSpeed((prev) => Math.max(prev, finalSpeed));
-            }
-            lastPosRef.current = { lat, lon, time: now };
-        }
-    };
 
     const startWatching = async () => {
       const granted = await requestPermission();
@@ -146,7 +141,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
               processLocation(
                   pos.coords.latitude, 
                   pos.coords.longitude, 
-                  pos.coords.speed ?? 0, 
+                  (pos.coords.speed ?? 0) * 3.6, 
                   pos.coords.accuracy, 
                   pos.coords.heading
               );
@@ -169,7 +164,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
           processLocation(
               loc.coords.latitude, 
               loc.coords.longitude, 
-              loc.coords.speed ?? 0, 
+              (loc.coords.speed ?? 0) * 3.6, 
               loc.coords.accuracy, 
               loc.coords.heading
           );

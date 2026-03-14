@@ -28,7 +28,7 @@ const schemeFromBundleId = `manus${timestamp}`;
 
 const env = {
   // App branding - update these values directly (do not use env vars)
-  appName: "Smart Babeta",
+  appName: "Babeta Tachometr",
   appSlug: "smart_babeta",
   // S3 URL of the app logo - set this to the URL returned by generate_image when creating custom logo
   // Leave empty to use the default icon from assets/images/icon.png
@@ -98,8 +98,8 @@ const config: ExpoConfig = {
     [
       "expo-location",
       {
-        locationAlwaysAndWhenInUsePermission: "Allow Smart Babeta to use your location for navigation.",
-        locationWhenInUsePermission: "Allow Smart Babeta to use your location for navigation.",
+        locationAlwaysAndWhenInUsePermission: "Allow Babeta Tachometr to use your location for navigation.",
+        locationWhenInUsePermission: "Allow Babeta Tachometr to use your location for navigation.",
       },
     ],
     [
@@ -107,7 +107,7 @@ const config: ExpoConfig = {
       {
         isBackgroundEnabled: false,
         modes: ["peripheral", "central"],
-        bluetoothAlwaysPermission: "Allow Smart Babeta to connect to your moped via Bluetooth.",
+        bluetoothAlwaysPermission: "Allow Babeta Tachometr to connect to your moped via Bluetooth.",
         nativeModule: true,
       },
     ],

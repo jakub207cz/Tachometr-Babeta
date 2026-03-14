@@ -19,8 +19,8 @@ export function Speedometer({ speed }: SpeedometerProps) {
     displayRef.current = displaySpeed;
   }, [displaySpeed]);
 
-  // Format speed with leading zeros for consistent width
-  const speedStr = displaySpeed.toString().padStart(3, " ");
+  // Format speed without leading zeros for perfect centering
+  const speedStr = displaySpeed.toString();
 
   return (
     <View style={styles.container}>
