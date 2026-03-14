@@ -128,10 +128,10 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
         // Calculate distance from user to the route line (in km, converted to meters)
         const distanceToRouteMeters = pointToLineDistance(userPoint, routeLine, { units: "kilometers" }) * 1000;
 
-        // If off-route by > 50 meters, trigger recalculation (debounced to once every 10 seconds)
+        // If off-route by > 50 meters, trigger recalculation (debounced to once every 1 second)
         if (distanceToRouteMeters > 50) {
           const now = Date.now();
-          if (now - lastRecalculationRef.current > 10000) {
+          if (now - lastRecalculationRef.current > 1000) {
             lastRecalculationRef.current = now;
             // Fire async fetchRoute without awaiting to avoid blocking state update
             fetchRoute(
@@ -166,7 +166,7 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
         }
 
         // Average moped speed assumption for ETA if actual speed is too low/zero
-        const speedKmh = location.speed > 5 ? location.speed : 30; // Min 30 km/h assumed for ETA if standing still
+        const speedKmh = location.speed > 5 ? location.speed : 5; // Min 5 km/h assumed for ETA if standing still (e.g. pushing/crawling tight spots)
         const speedMs = speedKmh / 3.6;
         const newDurationSeconds = remainingDistanceMeters / speedMs;
         
