@@ -39,7 +39,7 @@ export function SearchBar({ onSelectResult }: SearchBarProps) {
       const res = await fetch(url, {
         headers: {
           "User-Agent": "com.smart.babetta.app",
-          "Accept-Language": "en",
+          "Accept-Language": "cs",
         },
       });
       const data: SearchResult[] = await res.json();
@@ -81,7 +81,7 @@ export function SearchBar({ onSelectResult }: SearchBarProps) {
           value={query}
           onChangeText={handleChangeText}
           onFocus={() => setExpanded(true)}
-          placeholder="Search destination…"
+          placeholder="Vyhledat cíl…"
           placeholderTextColor="#374151"
           returnKeyType="search"
           onSubmitEditing={() => search(query)}

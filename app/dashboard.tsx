@@ -11,6 +11,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useKeepAwake } from "expo-keep-awake";
 import * as Haptics from "expo-haptics";
+import * as turf from "@turf/helpers";
+import distance from "@turf/distance";
+import rhumbBearing from "@turf/rhumb-bearing";
+import nearestPointOnLine from "@turf/nearest-point-on-line";
 
 import { useAppMode } from "@/context/AppModeContext";
 import { useLocation } from "@/context/LocationContext";
@@ -131,55 +135,47 @@ export default function DashboardScreen() {
       updateNavigationProgress(location);
 
       if (route.length > 2) {
-        import("@turf/helpers").then((turfHelpers) => {
-           import("@turf/distance").then((turfDistance) => {
-              import("@turf/rhumb-bearing").then((turfBearing) => {
-                  import("@turf/nearest-point-on-line").then((turfNearest) => {
-                      try {
-                        const userPoint = turfHelpers.point([location.longitude, location.latitude]);
-                        const routeLine = turfHelpers.lineString(route.map(p => [p.longitude, p.latitude]));
-                        const snapped = turfNearest.default(routeLine, userPoint);
-                        const currentIndex = snapped.properties.index || 0;
+        try {
+          const userPoint = turf.point([location.longitude, location.latitude]);
+          const routeLine = turf.lineString(route.map(p => [p.longitude, p.latitude]));
+          const snapped = nearestPointOnLine(routeLine, userPoint);
+          const currentIndex = snapped.properties.index || 0;
 
-                        let distToNextTurn = 0;
-                        let foundTurn = false;
-                        
-                        // Look ahead up to 20 points or end of route to find a sharp turn
-                        const lookaheadEnd = Math.min(currentIndex + 20, route.length - 2);
-                        
-                        for (let i = currentIndex; i < lookaheadEnd; i++) {
-                            const p1 = turfHelpers.point([route[i].longitude, route[i].latitude]);
-                            const p2 = turfHelpers.point([route[i+1].longitude, route[i+1].latitude]);
-                            const p3 = turfHelpers.point([route[i+2].longitude, route[i+2].latitude]);
-                            
-                            distToNextTurn += turfDistance.default(p1, p2, { units: "kilometers" }) * 1000;
-                            
-                            const bearing1 = turfBearing.default(p1, p2);
-                            const bearing2 = turfBearing.default(p2, p3);
-                            
-                            // Calculate angle difference (handle 360 wrap)
-                            let angleDiff = Math.abs(bearing1 - bearing2);
-                            if (angleDiff > 180) angleDiff = 360 - angleDiff;
-                            
-                            if (angleDiff > 30) {
-                                foundTurn = true;
-                                break;
-                            }
-                        }
+          let distToNextTurn = 0;
+          let foundTurn = false;
+          
+          // Look ahead up to 20 points or end of route to find a sharp turn
+          const lookaheadEnd = Math.min(currentIndex + 20, route.length - 2);
+          
+          for (let i = currentIndex; i < lookaheadEnd; i++) {
+              const p1 = turf.point([route[i].longitude, route[i].latitude]);
+              const p2 = turf.point([route[i+1].longitude, route[i+1].latitude]);
+              const p3 = turf.point([route[i+2].longitude, route[i+2].latitude]);
+              
+              distToNextTurn += distance(p1, p2, { units: "kilometers" }) * 1000;
+              
+              const bearing1 = rhumbBearing(p1, p2);
+              const bearing2 = rhumbBearing(p2, p3);
+              
+              // Calculate angle difference (handle 360 wrap)
+              let angleDiff = Math.abs(bearing1 - bearing2);
+              if (angleDiff > 180) angleDiff = 360 - angleDiff;
+              
+              if (angleDiff > 30) {
+                  foundTurn = true;
+                  break;
+              }
+          }
 
-                        // Smart Zoom Logic
-                        if (foundTurn && distToNextTurn < 100) {
-                            setMapZoom(18); // Zoom in for the turn
-                        } else {
-                            setMapZoom(15); // Zoom out for straight paths
-                        }
-                      } catch (e) {
-                         // silently fallback
-                      }
-                  });
-              });
-           });
-        });
+          // Smart Zoom Logic
+          if (foundTurn && distToNextTurn < 100) {
+              setMapZoom(18); // Zoom in for the turn
+          } else {
+              setMapZoom(15); // Zoom out for straight paths
+          }
+        } catch (e) {
+           // silently fallback
+        }
       }
     } else {
         setMapZoom(15);

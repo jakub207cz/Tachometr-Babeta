@@ -20,6 +20,7 @@ interface BLEContextType {
   stopScan: () => void;
   connectToDevice: (device: BLEDevice) => Promise<void>;
   disconnect: () => void;
+  readCharacteristic: (serviceUUID: string, charUUID: string) => Promise<string | null>;
 }
 
 const BLEContext = createContext<BLEContextType>({
@@ -31,6 +32,7 @@ const BLEContext = createContext<BLEContextType>({
   stopScan: () => { },
   connectToDevice: async () => { },
   disconnect: () => { },
+  readCharacteristic: async () => null,
 });
 
 export function BLEProvider({ children }: { children: React.ReactNode }) {
@@ -234,6 +236,28 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
     setErrorMessage(null);
   }, [getBLEManager, connectedDevice]);
 
+  const readCharacteristic = useCallback(
+    async (serviceUUID: string, charUUID: string): Promise<string | null> => {
+      const manager = getBLEManager();
+      if (!manager || !connectedDevice) return null;
+
+      try {
+        const char = await manager.readCharacteristicForDevice(
+          connectedDevice.id,
+          serviceUUID,
+          charUUID
+        );
+        if (char?.value) {
+          return atob(char.value).trim();
+        }
+      } catch (e) {
+        // Characteristic may not be available yet or device disconnected
+      }
+      return null;
+    },
+    [getBLEManager, connectedDevice]
+  );
+
   return (
     <BLEContext.Provider
       value={{
@@ -245,6 +269,7 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
         stopScan,
         connectToDevice,
         disconnect,
+        readCharacteristic,
       }}
     >
       {children}

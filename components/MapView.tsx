@@ -185,7 +185,6 @@ function OSMMapViewComponent({ latitude, longitude, route, autoFollow, zoomLevel
   const isLoadedRef = useRef(false);
   const pendingUpdatesRef = useRef<Array<() => void>>([]);
   const previousRouteRef = useRef<RoutePoint[]>([]);
-  const [isUserInteracting, setIsUserInteracting] = useState(false);
 
   const execJS = useCallback((js: string) => {
     if (isLoadedRef.current && webViewRef.current) {
@@ -231,7 +230,6 @@ function OSMMapViewComponent({ latitude, longitude, route, autoFollow, zoomLevel
   useEffect(() => {
     execJS(`setAutoFollow(${autoFollow})`);
     if (autoFollow && latitude != null && longitude != null) {
-      setIsUserInteracting(false); // Manually override the WebView's interaction lock
       execJS(`recenter(${latitude}, ${longitude})`);
     }
   }, [autoFollow, latitude, longitude, execJS]);
@@ -246,10 +244,7 @@ function OSMMapViewComponent({ latitude, longitude, route, autoFollow, zoomLevel
     try {
       const msg = JSON.parse(event.nativeEvent.data);
       if (msg.type === "interaction") {
-        setIsUserInteracting(true);
         onMapInteraction();
-      } else if (msg.type === "autoFollowResume") {
-        setIsUserInteracting(false);
       }
     } catch { }
   };
