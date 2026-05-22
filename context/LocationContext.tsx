@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import * as Location from "expo-location";
 import { Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as turf from "@turf/helpers";
 import distance from "@turf/distance";
 import { useAppMode } from "./AppModeContext";
@@ -36,6 +37,38 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
   const { mode } = useAppMode();
   const watcherRef = useRef<Location.LocationSubscription | null>(null);
   const lastPosRef = useRef<{ lat: number; lon: number; time: number } | null>(null);
+
+  // Načtení celkové maximální rychlosti z trvalého úložiště při startu aplikace
+  useEffect(() => {
+    const loadMaxSpeed = async () => {
+      try {
+        const stored = await AsyncStorage.getItem("babetta_max_speed");
+        if (stored !== null) {
+          const parsed = parseFloat(stored);
+          if (!isNaN(parsed)) {
+            setMaxSpeed(parsed);
+          }
+        }
+      } catch (e) {
+        console.warn("Chyba při načítání maximální rychlosti z AsyncStorage:", e);
+      }
+    };
+    loadMaxSpeed();
+  }, []);
+
+  // Pomocná metoda pro bezpečné uložení nové maximální rychlosti do trvalého úložiště
+  const updateMaxSpeed = useCallback((speed: number) => {
+    if (speed <= 0) return;
+    setMaxSpeed((prev) => {
+      const newMax = Math.max(prev, speed);
+      if (newMax > prev) {
+        AsyncStorage.setItem("babetta_max_speed", newMax.toString()).catch((err) => {
+          console.warn("Chyba při ukládání maximální rychlosti do AsyncStorage:", err);
+        });
+      }
+      return newMax;
+    });
+  }, []);
 
   const requestPermission = async (): Promise<boolean> => {
     if (Platform.OS === "web") {
@@ -95,9 +128,9 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
               heading: heading != null ? heading : undefined,
           });
           
-          // Aktualizace celkové maximální rychlosti
+          // Aktualizace celkové maximální rychlosti (s perzistencí)
           if (finalSpeed > 0) {
-              setMaxSpeed((prev) => Math.max(prev, finalSpeed));
+              updateMaxSpeed(finalSpeed);
           }
           lastPosRef.current = { lat, lon, time: now };
           return;
@@ -112,10 +145,10 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
           heading: heading != null ? heading : undefined,
       });
       if (finalSpeed > 0) {
-          setMaxSpeed((prev) => Math.max(prev, finalSpeed));
+          updateMaxSpeed(finalSpeed);
       }
       lastPosRef.current = { lat, lon, time: now };
-  }, []);
+  }, [updateMaxSpeed]);
 
   // Metoda volaná z BLE hooku pro aktualizaci dat z externího ESP32 modulu
   const updateFromBLE = useCallback((lat: number, lon: number, speed: number) => {
