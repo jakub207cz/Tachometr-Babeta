@@ -33,7 +33,7 @@ export default function HomeScreen() {
           style={styles.logo}
           resizeMode="contain"
         />
-        <Text style={styles.title}>BABETA TACHOMETR</Text>
+        <Text style={styles.title}>BABETTA TACHOMETR</Text>
         <Text style={styles.subtitle}>Vintage Moped Dashboard</Text>
       </View>
 
@@ -83,7 +83,7 @@ export default function HomeScreen() {
       </View>
 
       {/* Footer */}
-      <Text style={styles.version}>v1.0.0 · Babeta Tachometr</Text>
+      <Text style={styles.version}>v1.0.0 · Babetta Tachometr</Text>
     </SafeAreaView>
   );
 }

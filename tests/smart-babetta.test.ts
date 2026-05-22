@@ -56,7 +56,7 @@ function msToKmh(speedMs: number): number {
   return Math.max(0, speedMs * 3.6);
 }
 
-describe("Smart Babeta — Core Utilities", () => {
+describe("Smart Babetta — Core Utilities", () => {
   describe("OSRM Polyline Decoder", () => {
     it("decodes a simple encoded polyline", () => {
       // Known encoded polyline for Paris area

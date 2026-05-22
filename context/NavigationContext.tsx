@@ -97,7 +97,7 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
     try {
       const url = `https://router.project-osrm.org/route/v1/driving/${from.longitude},${from.latitude};${to.longitude},${to.latitude}?overview=full&geometries=polyline`;
       const res = await fetch(url, {
-        headers: { "User-Agent": "com.smart.babeta.app" },
+        headers: { "User-Agent": "com.smart.babetta.app" },
       });
       const data = await res.json();
 

@@ -38,7 +38,7 @@ export function SearchBar({ onSelectResult }: SearchBarProps) {
       const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(text)}&format=json&limit=5&addressdetails=0`;
       const res = await fetch(url, {
         headers: {
-          "User-Agent": "com.smart.babeta.app",
+          "User-Agent": "com.smart.babetta.app",
           "Accept-Language": "en",
         },
       });

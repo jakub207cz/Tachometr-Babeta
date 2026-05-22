@@ -197,7 +197,7 @@ export default function DashboardScreen() {
           <Pressable onPress={handleBack} style={styles.backButton}>
             <Text style={styles.backText}>← Back</Text>
           </Pressable>
-          <Text style={styles.headerTitle}>BABETA TACHOMETR</Text>
+          <Text style={styles.headerTitle}>BABETTA TACHOMETR</Text>
           <View style={styles.modeBadge}>
             <Text style={[styles.modeText, { color: isBLEMode ? "#FF6D00" : "#00E5FF" }]}>
               {isBLEMode ? "BLE" : "GPS"}

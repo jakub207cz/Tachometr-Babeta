@@ -6,7 +6,7 @@ import type { ExpoConfig } from "expo/config";
 // e.g., "my-app" created at 2024-01-15 10:30:45 -> "space.manus.my.app.t20240115103045"
 // Bundle ID can only contain letters, numbers, and dots
 // Android requires each dot-separated segment to start with a letter
-const rawBundleId = "space.manus.smart_babeta.t20260305131651";
+const rawBundleId = "space.manus.smart_babetta.t20260305131651";
 const bundleId =
   rawBundleId
     .replace(/[-_]/g, ".") // Replace hyphens/underscores with dots
@@ -28,8 +28,8 @@ const schemeFromBundleId = `manus${timestamp}`;
 
 const env = {
   // App branding - update these values directly (do not use env vars)
-  appName: "Babeta Tachometr",
-  appSlug: "smart_babeta",
+  appName: "Babetta Tachometr",
+  appSlug: "smart_babetta",
   // S3 URL of the app logo - set this to the URL returned by generate_image when creating custom logo
   // Leave empty to use the default icon from assets/images/icon.png
   logoUrl: "https://d2xsxph8kpxj0f.cloudfront.net/310519663406851639/YpKbnppfarHjY57Q5Km4rx/smart_babeta_icon-jKyW4x27RrYkepVfnXpjnU.png",
@@ -98,8 +98,8 @@ const config: ExpoConfig = {
     [
       "expo-location",
       {
-        locationAlwaysAndWhenInUsePermission: "Allow Babeta Tachometr to use your location for navigation.",
-        locationWhenInUsePermission: "Allow Babeta Tachometr to use your location for navigation.",
+        locationAlwaysAndWhenInUsePermission: "Allow Babetta Tachometr to use your location for navigation.",
+        locationWhenInUsePermission: "Allow Babetta Tachometr to use your location for navigation.",
       },
     ],
     [
@@ -107,7 +107,7 @@ const config: ExpoConfig = {
       {
         isBackgroundEnabled: false,
         modes: ["peripheral", "central"],
-        bluetoothAlwaysPermission: "Allow Babeta Tachometr to connect to your moped via Bluetooth.",
+        bluetoothAlwaysPermission: "Allow Babetta Tachometr to connect to your moped via Bluetooth.",
         nativeModule: true,
       },
     ],

@@ -1,4 +1,4 @@
-# Smart Babeta — TODO
+# Smart Babetta — TODO
 
 ## Setup & Configuration
 - [x] Configure OLED dark theme colors in theme.config.js
@@ -56,7 +56,7 @@
 
 ## Branding
 - [x] Generate moped dashboard logo
-- [x] Update app name to "Smart Babeta"
+- [x] Update app name to "Smart Babetta"
 - [x] Update all icon assets
 
 

@@ -54,7 +54,7 @@ function buildMapHTML(lat: number, lon: number): string {
   var tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap',
-    userAgent: 'com.smart.babeta.app'
+    userAgent: 'com.smart.babetta.app'
   }).addTo(map);
 
   var userIcon = L.divIcon({ className: '', html: '<div class="user-marker"></div>', iconSize: [18, 18], iconAnchor: [9, 9] });

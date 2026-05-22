@@ -1,4 +1,4 @@
-# Smart Babeta — Mobile App Interface Design
+# Smart Babetta — Mobile App Interface Design
 
 ## Concept
 A high-contrast OLED dashboard for a vintage Babetta moped. The app runs in two modes:
@@ -54,7 +54,7 @@ A high-contrast OLED dashboard for a vintage Babetta moped. The app runs in two 
 
 ```
 ┌─────────────────────────────┐
-│  [← Back]    SMART BABETA   │  ← Header (status bar height)
+│  [← Back]    SMART BABETTA │  ← Header (status bar height)
 ├─────────────────────────────┤
 │                             │
 │       [  142  ]             │  ← Large digital speedometer (30%)
