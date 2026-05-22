@@ -28,38 +28,18 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container} edges={["top", "left", "right", "bottom"]}>
       {/* Header */}
       <View style={styles.header}>
-        <Image
-          source={require("@/assets/images/icon.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <Pressable onPress={handleStandalone}>
+          <Image
+            source={require("@/assets/images/icon.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </Pressable>
         <Text style={styles.title}>BABETTA TACHOMETR</Text>
-        <Text style={styles.subtitle}>Vintage Moped Dashboard</Text>
       </View>
 
       {/* Mode Buttons */}
       <View style={styles.buttonsContainer}>
-        {/* Standalone Mode */}
-        <Pressable
-          onPress={handleStandalone}
-          style={({ pressed }) => [
-            styles.modeButton,
-            styles.standaloneButton,
-            pressed && styles.buttonPressed,
-          ]}
-        >
-          <View style={styles.buttonIconRow}>
-            <Text style={styles.buttonIcon}>📍</Text>
-            <Text style={[styles.buttonTitle, styles.cyanText]}>STANDALONE MODE</Text>
-          </View>
-          <Text style={styles.buttonDesc}>
-            Uses your phone's built-in GPS for speed and navigation. No Bluetooth required.
-          </Text>
-          <View style={[styles.buttonBadge, styles.cyanBadge]}>
-            <Text style={[styles.badgeText, styles.cyanText]}>GPS ONLY</Text>
-          </View>
-        </Pressable>
-
         {/* BLE Mode */}
         <Pressable
           onPress={handleBLE}
@@ -71,10 +51,10 @@ export default function HomeScreen() {
         >
           <View style={styles.buttonIconRow}>
             <Text style={styles.buttonIcon}>🔵</Text>
-            <Text style={[styles.buttonTitle, styles.orangeText]}>BABETTA BLE MODE</Text>
+            <Text style={[styles.buttonTitle, styles.orangeText]}>PŘIPOJIT SE</Text>
           </View>
           <Text style={styles.buttonDesc}>
-            Connects to your moped's ESP32-C6 via Bluetooth. Receives live GPS and speed from the bike.
+            Připojí se k palubnímu modulu Babetty přes Bluetooth a načte rychlost a GPS data.
           </Text>
           <View style={[styles.buttonBadge, styles.orangeBadge]}>
             <Text style={[styles.badgeText, styles.orangeText]}>BLUETOOTH</Text>

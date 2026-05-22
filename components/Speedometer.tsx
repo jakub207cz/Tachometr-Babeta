@@ -40,11 +40,6 @@ export function Speedometer({ speed }: SpeedometerProps) {
           ]}
         />
       </View>
-      <View style={styles.barLabels}>
-        {[0, 20, 40, 60, 80].map((v) => (
-          <Text key={v} style={styles.barLabel}>{v}</Text>
-        ))}
-      </View>
     </View>
   );
 }
@@ -75,7 +70,6 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     letterSpacing: 3,
     marginTop: -4,
-    textTransform: "uppercase",
   },
   barContainer: {
     width: "80%",

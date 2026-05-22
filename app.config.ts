@@ -98,8 +98,8 @@ const config: ExpoConfig = {
     [
       "expo-location",
       {
-        locationAlwaysAndWhenInUsePermission: "Allow Babetta Tachometr to use your location for navigation.",
-        locationWhenInUsePermission: "Allow Babetta Tachometr to use your location for navigation.",
+        locationAlwaysAndWhenInUsePermission: "Umožňuje Babetta Tachometru používat polohu pro navigaci a zobrazení trasy.",
+        locationWhenInUsePermission: "Umožňuje Babetta Tachometru používat polohu pro navigaci a zobrazení trasy.",
       },
     ],
     [
@@ -107,14 +107,14 @@ const config: ExpoConfig = {
       {
         isBackgroundEnabled: false,
         modes: ["peripheral", "central"],
-        bluetoothAlwaysPermission: "Allow Babetta Tachometr to connect to your moped via Bluetooth.",
+        bluetoothAlwaysPermission: "Umožňuje Babetta Tachometru připojit se k palubnímu modulu přes Bluetooth.",
         nativeModule: true,
       },
     ],
     [
       "expo-audio",
       {
-        microphonePermission: "Allow $(PRODUCT_NAME) to access your microphone.",
+        microphonePermission: "Umožňuje $(PRODUCT_NAME) přístup k mikrofonu.",
       },
     ],
     [

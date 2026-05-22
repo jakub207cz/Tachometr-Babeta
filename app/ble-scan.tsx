@@ -58,7 +58,7 @@ function DeviceItem({
       ]}
     >
       <View style={styles.deviceInfo}>
-        <Text style={styles.deviceName}>{device.name ?? "Unknown Device"}</Text>
+        <Text style={styles.deviceName}>{device.name ?? "Neznámé zařízení"}</Text>
         <Text style={styles.deviceId}>{device.id}</Text>
       </View>
       <View style={styles.deviceRight}>
@@ -136,9 +136,9 @@ export default function BleScanScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={handleBack} style={styles.backButton}>
-          <Text style={styles.backText}>← Back</Text>
+          <Text style={styles.backText}>← Zpět</Text>
         </Pressable>
-        <Text style={styles.headerTitle}>BLUETOOTH SCAN</Text>
+        <Text style={styles.headerTitle}>VYHLEDÁVÁNÍ BLUETOOTH</Text>
         <View style={{ width: 60 }} />
       </View>
 
@@ -160,13 +160,13 @@ export default function BleScanScreen() {
               <Text style={styles.scanButtonIcon}>🔍</Text>
             )}
             <Text style={[styles.scanButtonText, isScanning && styles.scanButtonTextActive]}>
-              {isScanning ? "SCANNING..." : "SCAN FOR DEVICES"}
+              {isScanning ? "VYHLEDÁVÁM..." : "VYHLEDAT ZAŘÍZENÍ"}
             </Text>
           </Pressable>
         </Animated.View>
 
         {isScanning && (
-          <Text style={styles.scanHint}>Scanning for nearby Bluetooth devices…</Text>
+          <Text style={styles.scanHint}>Vyhledávám blízká Bluetooth zařízení…</Text>
         )}
       </View>
 
@@ -180,30 +180,30 @@ export default function BleScanScreen() {
       {isConnecting && (
         <View style={styles.connectingBanner}>
           <ActivityIndicator color="#FF6D00" size="small" />
-          <Text style={styles.connectingText}>Connecting to device…</Text>
+          <Text style={styles.connectingText}>Připojování k zařízení…</Text>
         </View>
       )}
 
       {isConnected && connectedDevice && (
         <View style={styles.connectedBanner}>
-          <Text style={styles.connectedText}>✓ Connected to {connectedDevice.name ?? connectedDevice.id}</Text>
+          <Text style={styles.connectedText}>✓ Připojeno k {connectedDevice.name ?? connectedDevice.id}</Text>
         </View>
       )}
 
       {/* Device List */}
       <View style={styles.listContainer}>
         <Text style={styles.listHeader}>
-          {devices.length > 0 ? `DISCOVERED DEVICES (${devices.length})` : "DISCOVERED DEVICES"}
+          {devices.length > 0 ? `NALEZENÁ ZAŘÍZENÍ (${devices.length})` : "NALEZENÁ ZAŘÍZENÍ"}
         </Text>
 
         {devices.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyIcon}>📡</Text>
-            <Text style={styles.emptyTitle}>No devices found</Text>
+            <Text style={styles.emptyTitle}>Žádná zařízení nebyla nalezena</Text>
             <Text style={styles.emptyDesc}>
               {isScanning
-                ? "Searching for nearby Bluetooth devices…"
-                : "Tap \"Scan for Devices\" to start searching for your moped's ESP32-C6."}
+                ? "Vyhledávám blízká Bluetooth zařízení…"
+                : "Klepnutím na „Vyhledat zařízení“ spustíte vyhledávání GPS modulu Babetty."}
             </Text>
           </View>
         ) : (
@@ -227,7 +227,7 @@ export default function BleScanScreen() {
       {Platform.OS === "web" && (
         <View style={styles.webNote}>
           <Text style={styles.webNoteText}>
-            Bluetooth scanning is only available on Android/iOS devices.
+            Vyhledávání Bluetooth je dostupné pouze na zařízeních Android/iOS.
           </Text>
         </View>
       )}

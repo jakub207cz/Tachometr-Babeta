@@ -59,11 +59,11 @@ export default function DashboardScreen() {
 
   const connectionLabel = isBLEMode
     ? bleState === "connected"
-      ? `BLE · ${connectedDevice?.name ?? "ESP32-C6"}`
-      : "BLE · Disconnected"
+      ? `BLE · ${connectedDevice?.name ?? "Smart Babetta GPS"}`
+      : "BLE · Odpojeno"
     : location != null
-    ? "GPS · Active"
-    : "GPS · Searching…";
+    ? "GPS · Aktivní"
+    : "GPS · Vyhledávání signálu…";
 
   const connectionColor = isConnected ? "#00E676" : "#FF1744";
 
@@ -195,7 +195,7 @@ export default function DashboardScreen() {
         {/* ── Header ── */}
         <View style={styles.header}>
           <Pressable onPress={handleBack} style={styles.backButton}>
-            <Text style={styles.backText}>← Back</Text>
+            <Text style={styles.backText}>← Zpět</Text>
           </Pressable>
           <Text style={styles.headerTitle}>BABETTA TACHOMETR</Text>
           <View style={styles.modeBadge}>
@@ -208,11 +208,11 @@ export default function DashboardScreen() {
         {/* ── Max Speed Bar (New) ── */}
         <View style={styles.maxSpeedBar}>
            <Text style={styles.maxSpeedText}>
-               <Text style={styles.maxSpeedLabel}>TRIP MAX: </Text>
+               <Text style={styles.maxSpeedLabel}>MAX TRASA: </Text>
                {Math.round(routeMaxSpeed)} km/h
            </Text>
            <Text style={styles.maxSpeedText}>
-               <Text style={styles.maxSpeedLabel}>ALL-TIME MAX: </Text>
+               <Text style={styles.maxSpeedLabel}>CELKOVÉ MAX: </Text>
                {Math.round(maxSpeed)} km/h
            </Text>
         </View>
@@ -236,16 +236,16 @@ export default function DashboardScreen() {
           {isNavigating ? (
             <View style={styles.navStats}>
               <View style={styles.navStatItem}>
-                <Text style={styles.navStatLabel}>ETA</Text>
+                <Text style={styles.navStatLabel}>DOJEZD</Text>
                 <Text style={styles.navStatValue}>{formatDuration(durationSeconds)}</Text>
               </View>
               <View style={styles.navDivider} />
               <View style={styles.navStatItem}>
-                <Text style={styles.navStatLabel}>DISTANCE</Text>
+                <Text style={styles.navStatLabel}>VZDÁLENOST</Text>
                 <Text style={styles.navStatValue}>{formatDistance(distanceMeters)}</Text>
               </View>
               <Pressable onPress={handleClearRoute} style={styles.clearRouteBtn}>
-                <Text style={styles.clearRouteText}>✕ Clear</Text>
+                <Text style={styles.clearRouteText}>✕ Vymazat</Text>
               </Pressable>
             </View>
           ) : (
@@ -273,7 +273,7 @@ export default function DashboardScreen() {
               style={({ pressed }) => [styles.recenterFab, pressed && styles.recenterFabPressed]}
             >
               <Text style={styles.recenterIcon}>⊕</Text>
-              <Text style={styles.recenterText}>Re-center</Text>
+              <Text style={styles.recenterText}>Centrovat</Text>
             </Pressable>
           )}
         </View>

@@ -95,28 +95,28 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
    */
   const requestPermissionsAndVerifyAdapter = useCallback(async (): Promise<boolean> => {
     if (Platform.OS === "web") {
-      setErrorMessage("Bluetooth is not available on web.");
+      setErrorMessage("Bluetooth není na webu k dispozici.");
       return false;
     }
 
     // Request location permission (required for BLE scan on Android 12+)
     const locationGranted = await requestLocationPermission();
     if (!locationGranted) {
-      setErrorMessage("Location permission required for Bluetooth scanning.");
+      setErrorMessage("Pro vyhledávání Bluetooth je vyžadováno povolení k polohovým službám.");
       return false;
     }
 
     // Request BLE runtime permissions for Android 12+
     const bleGranted = await requestBLEPermissions();
     if (!bleGranted) {
-      setErrorMessage("Bluetooth permissions are required to scan for devices.");
+      setErrorMessage("Pro vyhledávání zařízení jsou vyžadována oprávnění k Bluetooth.");
       return false;
     }
 
     // Check if BLE adapter is available and enabled
     const adapterReady = await checkBLEAdapter();
     if (!adapterReady) {
-      setErrorMessage("Bluetooth adapter is not available or disabled. Please enable Bluetooth.");
+      setErrorMessage("Bluetooth adaptér není k dispozici nebo je vypnutý. Zapněte prosím Bluetooth.");
       return false;
     }
 
@@ -125,7 +125,7 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
 
   const startScan = useCallback(async () => {
     if (Platform.OS === "web") {
-      setErrorMessage("Bluetooth is not available on web.");
+      setErrorMessage("Bluetooth není na webu k dispozici.");
       return;
     }
 
@@ -138,7 +138,7 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
 
     const manager = getBLEManager();
     if (!manager) {
-      setErrorMessage("Bluetooth manager unavailable.");
+      setErrorMessage("Bluetooth správce není k dispozici.");
       setConnectionState("error");
       return;
     }
@@ -151,17 +151,21 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
       manager.startDeviceScan(null, { allowDuplicates: false }, (error: any, device: any) => {
         if (error) {
           console.warn("BLE scan error:", error);
-          setErrorMessage(error.message ?? "Scan error");
+          setErrorMessage(error.message ?? "Chyba při vyhledávání");
           setConnectionState("error");
           return;
         }
 
         if (device) {
-          setDevices((prev) => {
-            const exists = prev.find((d) => d.id === device.id);
-            if (exists) return prev;
-            return [...prev, { id: device.id, name: device.name, rssi: device.rssi }];
-          });
+          const name = device.name;
+          const isBabetta = name && (name.toLowerCase().includes("babeta") || name.toLowerCase().includes("babetta"));
+          if (isBabetta) {
+            setDevices((prev) => {
+              const exists = prev.find((d) => d.id === device.id);
+              if (exists) return prev;
+              return [...prev, { id: device.id, name: device.name, rssi: device.rssi }];
+            });
+          }
         }
       });
 
@@ -172,7 +176,7 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
       }, 15000);
     } catch (e: any) {
       console.warn("BLE scan start error:", e);
-      setErrorMessage(e.message ?? "Failed to start scan");
+      setErrorMessage(e.message ?? "Nepodařilo se spustit vyhledávání");
       setConnectionState("error");
     }
   }, [getBLEManager, requestPermissionsAndVerifyAdapter]);
@@ -209,7 +213,7 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
         setConnectionState("connected");
       } catch (e: any) {
         console.warn("BLE connect error:", e);
-        setErrorMessage(e.message ?? "Connection failed");
+        setErrorMessage(e.message ?? "Připojení selhalo");
         setConnectionState("error");
       }
     },
