@@ -12,17 +12,21 @@ interface MapViewProps {
   onMapInteraction: () => void;
 }
 
+// Šablona HTML stránky s mapou Leaflet, která běžní uvnitř WebView komponenty
 function buildMapHTML(lat: number, lon: number): string {
   return `<!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- Načtení stylů a skriptů knihovny Leaflet z CDN -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body, #map { width: 100%; height: 100%; background: #0D0D0D; }
+  /* Tmavý režim mapy pomocí CSS filtru nad dlaždicemi OpenStreetMap */
   .leaflet-tile-pane { filter: brightness(0.85) saturate(0.7); }
+  /* Styl uživatelského markeru (modrý bod) */
   .user-marker { 
     width: 18px; height: 18px; 
     background: #00E5FF; 
@@ -30,6 +34,7 @@ function buildMapHTML(lat: number, lon: number): string {
     border: 3px solid #000;
     box-shadow: 0 0 12px rgba(0,229,255,0.8);
   }
+  /* Styl cílového markeru (oranžový bod) */
   .dest-marker {
     width: 14px; height: 14px;
     background: #FF6D00;
@@ -43,6 +48,7 @@ function buildMapHTML(lat: number, lon: number): string {
 <div id="map"></div>
 <script>
   var currentZoom = 15;
+  // Inicializace mapy s počátečními souřadnicemi a zoomem
   var map = L.map('map', {
     center: [${lat}, ${lon}],
     zoom: currentZoom,
@@ -50,13 +56,14 @@ function buildMapHTML(lat: number, lon: number): string {
     attributionControl: false
   });
 
-  // Use const tile layer (never recreate)
+  // Načtení mapových dlaždic OpenStreetMap
   var tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap',
     userAgent: 'com.smart.babetta.app'
   }).addTo(map);
 
+  // Vytvoření ikon pro uživatele a cíl z vlastních HTML elementů (divIcon)
   var userIcon = L.divIcon({ className: '', html: '<div class="user-marker"></div>', iconSize: [18, 18], iconAnchor: [9, 9] });
   var destIcon = L.divIcon({ className: '', html: '<div class="dest-marker"></div>', iconSize: [14, 14], iconAnchor: [7, 7] });
 
@@ -68,7 +75,9 @@ function buildMapHTML(lat: number, lon: number): string {
   var interactionTimer = null;
   var lastInteractionTime = 0;
 
-  // 10-second auto-follow pause with interaction tracking
+  // PAUZA AUTO-FOLLOW PŘI GESTECH UŽIVATELE:
+  // Pokud uživatel začne mapu posouvat (drag) nebo přibližovat (zoom), vypne se automatické sledování polohy (auto-follow).
+  // Odešleme zprávu do React Native přes WebView Bridge o interakci a naplánujeme obnovení sledování po 10 sekundách nečinnosti.
   map.on('dragstart zoomstart', function() {
     isUserInteracting = true;
     autoFollow = false;
@@ -76,7 +85,7 @@ function buildMapHTML(lat: number, lon: number): string {
     clearTimeout(interactionTimer);
     window.ReactNativeWebView && window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'interaction' }));
     
-    // Schedule auto-follow resume after 10 seconds of no interaction
+    // Automatické zapnutí sledování po 10 sekundách bez interakce
     interactionTimer = setTimeout(function() {
       isUserInteracting = false;
       autoFollow = true;
@@ -95,6 +104,7 @@ function buildMapHTML(lat: number, lon: number): string {
     }, 10000);
   });
 
+  // Změna úrovně přiblížení
   function setZoomLevel(level) {
     if (currentZoom !== level) {
         currentZoom = level;
@@ -104,7 +114,7 @@ function buildMapHTML(lat: number, lon: number): string {
     }
   }
 
-  // Smooth camera transition with animation (only update marker, not entire map)
+  // Aktualizace aktuální pozice jezdce na mapě (plynulá animace trvající 500 ms)
   function updatePosition(lat, lon) {
     userMarker.setLatLng([lat, lon]);
     if (autoFollow && !isUserInteracting) {
@@ -113,7 +123,7 @@ function buildMapHTML(lat: number, lon: number): string {
     }
   }
 
-  // Persistent route: only update if route data changes, never clear on position updates
+  // Vykreslení trasy (navigační čáry) z pole souřadnic
   function setRoute(points) {
     if (routePolyline) { 
       map.removeLayer(routePolyline); 
@@ -132,7 +142,7 @@ function buildMapHTML(lat: number, lon: number): string {
     }
   }
 
-  // Persistent destination marker
+  // Nastavení cílového bodu trasy (oranžový bod)
   function setDestination(lat, lon) {
     if (destMarker) { 
       map.removeLayer(destMarker); 
@@ -140,7 +150,7 @@ function buildMapHTML(lat: number, lon: number): string {
     destMarker = L.marker([lat, lon], { icon: destIcon }).addTo(map);
   }
 
-  // Clear route and destination
+  // Smazání trasy a cíle z mapy
   function clearRoute() {
     if (routePolyline) { 
       map.removeLayer(routePolyline);
@@ -152,7 +162,7 @@ function buildMapHTML(lat: number, lon: number): string {
     }
   }
 
-  // Smooth recenter with animation
+  // Vycentrování kamery na jezdce (např. při stisku tlačítka "Centrovat")
   function recenter(lat, lon) {
     isUserInteracting = false;
     autoFollow = true;
@@ -166,7 +176,7 @@ function buildMapHTML(lat: number, lon: number): string {
     return isUserInteracting;
   }
 
-  // Expose functions to React Native
+  // Expozice JavaScriptových funkcí do globálního okna WebView pro možnost volání z React Native
   window.updatePosition = updatePosition;
   window.setRoute = setRoute;
   window.setDestination = setDestination;
@@ -186,6 +196,7 @@ function OSMMapViewComponent({ latitude, longitude, route, autoFollow, zoomLevel
   const pendingUpdatesRef = useRef<Array<() => void>>([]);
   const previousRouteRef = useRef<RoutePoint[]>([]);
 
+  // Bezpečné vykonání JS kódu uvnitř běžícího WebView
   const execJS = useCallback((js: string) => {
     if (isLoadedRef.current && webViewRef.current) {
       webViewRef.current.injectJavaScript(js + "; true;");
@@ -196,18 +207,18 @@ function OSMMapViewComponent({ latitude, longitude, route, autoFollow, zoomLevel
     }
   }, []);
 
-  // Update zoom level dynamically
+  // Sledování změn zoomu a předání do WebView
   useEffect(() => {
     execJS(`setZoomLevel(${zoomLevel})`);
   }, [zoomLevel, execJS]);
 
-  // Update user position (NEVER clears route) — only marker moves
+  // Sledování pozice jezdce a předání do WebView
   useEffect(() => {
     if (latitude == null || longitude == null) return;
     execJS(`updatePosition(${latitude}, ${longitude})`);
   }, [latitude, longitude, execJS]);
 
-  // Update route ONLY when route data actually changes
+  // Sledování změn trasy a překreslení
   useEffect(() => {
     const routeChanged =
       route.length !== previousRouteRef.current.length ||
@@ -226,7 +237,7 @@ function OSMMapViewComponent({ latitude, longitude, route, autoFollow, zoomLevel
     }
   }, [route, execJS]);
 
-  // Update auto-follow state
+  // Sledování změn režimu automatického sledování kamery (autoFollow)
   useEffect(() => {
     execJS(`setAutoFollow(${autoFollow})`);
     if (autoFollow && latitude != null && longitude != null) {
@@ -257,8 +268,7 @@ function OSMMapViewComponent({ latitude, longitude, route, autoFollow, zoomLevel
     );
   }
 
-  // Ensure the initial HTML is generated only once using the first valid coordinates
-  // so the WebView doesn't completely reload its source on every GPS tick.
+  // Uložení počáteční polohy, aby se WebView nenačítalo znovu a neblikalo při každém novém GPS vzorku
   const initialLatRef = useRef<number>(latitude ?? 48.8566);
   const initialLonRef = useRef<number>(longitude ?? 2.3522);
 
@@ -291,9 +301,9 @@ function OSMMapViewComponent({ latitude, longitude, route, autoFollow, zoomLevel
   );
 }
 
-// Memoize to prevent re-renders unless props actually change
+// Zamezení zbytečného překreslování WebView (výkonová optimalizace)
+// Komponentu překreslíme pouze pokud se změní pozice, stav autoFollow nebo data trasy.
 export const OSMMapView = React.memo(OSMMapViewComponent, (prevProps, nextProps) => {
-  // Return true if props are equal (no re-render), false if different (re-render)
   const routeIsEqual =
     prevProps.route.length === nextProps.route.length &&
     prevProps.route.every((point, i) =>

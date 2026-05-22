@@ -125,13 +125,14 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
     return true;
   }, [requestLocationPermission, checkBLEAdapter]);
 
+  // Spuštění vyhledávání Bluetooth zařízení
   const startScan = useCallback(async () => {
     if (Platform.OS === "web") {
       setErrorMessage("Bluetooth není na webu k dispozici.");
       return;
     }
 
-    // Verify permissions and adapter state
+    // Ověření potřebných oprávnění a stavu Bluetooth adaptéru v telefonu
     const ready = await requestPermissionsAndVerifyAdapter();
     if (!ready) {
       setConnectionState("error");
@@ -150,6 +151,7 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
     setConnectionState("scanning");
 
     try {
+      // Zahájení samotného skenování okolí
       manager.startDeviceScan(null, { allowDuplicates: false }, (error: any, device: any) => {
         if (error) {
           console.warn("BLE scan error:", error);
@@ -160,18 +162,21 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
 
         if (device) {
           const name = device.name;
+          // FILTRACE ZAŘÍZENÍ: Zobrazujeme pouze zařízení, které mají v názvu "babeta" nebo "babetta"
+          // Tím zamezíme zobrazení televizí, hodinek a jiného Bluetooth šumu v okolí.
           const isBabetta = name && (name.toLowerCase().includes("babeta") || name.toLowerCase().includes("babetta"));
           if (isBabetta) {
             setDevices((prev) => {
               const exists = prev.find((d) => d.id === device.id);
               if (exists) return prev;
+              // Uložíme ID, název a sílu signálu RSSI
               return [...prev, { id: device.id, name: device.name, rssi: device.rssi }];
             });
           }
         }
       });
 
-      // Auto-stop scan after 15 seconds
+      // Automatické zastavení vyhledávání po 15 sekundách (šetří baterii zařízení)
       if (scanTimerRef.current) clearTimeout(scanTimerRef.current);
       scanTimerRef.current = setTimeout(() => {
         stopScan();
@@ -183,6 +188,7 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
     }
   }, [getBLEManager, requestPermissionsAndVerifyAdapter]);
 
+  // Zastavení vyhledávání Bluetooth zařízení
   const stopScan = useCallback(() => {
     const manager = getBLEManager();
     if (manager) {
@@ -199,17 +205,20 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
     setConnectionState((prev) => (prev === "scanning" ? "idle" : prev));
   }, [getBLEManager]);
 
+  // Připojení k vybranému Bluetooth zařízení
   const connectToDevice = useCallback(
     async (device: BLEDevice) => {
       const manager = getBLEManager();
       if (!manager) return;
 
-      stopScan();
+      stopScan(); // Před připojením zastavíme vyhledávání
       setConnectionState("connecting");
       setErrorMessage(null);
 
       try {
+        // Navázání spojení se zařízením
         const connected = await manager.connectToDevice(device.id);
+        // Vyhledání všech dostupných služeb a charakteristik na ESP32 (klíčové pro čtení dat)
         await connected.discoverAllServicesAndCharacteristics();
         setConnectedDevice(device);
         setConnectionState("connected");
@@ -222,6 +231,7 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
     [getBLEManager, stopScan]
   );
 
+  // Odpojení od aktuálně připojeného Bluetooth zařízení
   const disconnect = useCallback(() => {
     const manager = getBLEManager();
     if (manager && connectedDevice) {
@@ -236,22 +246,25 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
     setErrorMessage(null);
   }, [getBLEManager, connectedDevice]);
 
+  // Pomocná metoda pro přečtení hodnoty konkrétní Bluetooth charakteristiky
   const readCharacteristic = useCallback(
     async (serviceUUID: string, charUUID: string): Promise<string | null> => {
       const manager = getBLEManager();
       if (!manager || !connectedDevice) return null;
 
       try {
+        // Přečteme data ze zařízení (vrací Base64 kódovaný řetězec)
         const char = await manager.readCharacteristicForDevice(
           connectedDevice.id,
           serviceUUID,
           charUUID
         );
         if (char?.value) {
+          // Dekódujeme Base64 na běžný text (ASCII) a ořízneme mezery
           return atob(char.value).trim();
         }
       } catch (e) {
-        // Characteristic may not be available yet or device disconnected
+        // Charakteristika nemusí být ještě připravená, nebo došlo k odpojení
       }
       return null;
     },

@@ -136,15 +136,18 @@ export default function DashboardScreen() {
 
       if (route.length > 2) {
         try {
+          // Vytvoříme bod z aktuální pozice jezdce
           const userPoint = turf.point([location.longitude, location.latitude]);
+          // Převedeme trasu na čáru (LineString) pro knihovnu Turf
           const routeLine = turf.lineString(route.map(p => [p.longitude, p.latitude]));
+          // Najdeme nejbližší bod na trase k pozici uživatele (přichycení k trase)
           const snapped = nearestPointOnLine(routeLine, userPoint);
           const currentIndex = snapped.properties.index || 0;
 
           let distToNextTurn = 0;
           let foundTurn = false;
           
-          // Look ahead up to 20 points or end of route to find a sharp turn
+          // Budeme se dívat dopředu až o 20 bodů trasy pro detekci zatáček
           const lookaheadEnd = Math.min(currentIndex + 20, route.length - 2);
           
           for (let i = currentIndex; i < lookaheadEnd; i++) {
@@ -152,29 +155,34 @@ export default function DashboardScreen() {
               const p2 = turf.point([route[i+1].longitude, route[i+1].latitude]);
               const p3 = turf.point([route[i+2].longitude, route[i+2].latitude]);
               
+              // Připočítáme vzdálenost mezi body v metrech
               distToNextTurn += distance(p1, p2, { units: "kilometers" }) * 1000;
               
+              // Spočítáme azimut (úhel směru) před a za uzlovým bodem
               const bearing1 = rhumbBearing(p1, p2);
               const bearing2 = rhumbBearing(p2, p3);
               
-              // Calculate angle difference (handle 360 wrap)
+              // Rozdíl úhlů obou směrů (s ošetřením přechodu přes 360 stupňů)
               let angleDiff = Math.abs(bearing1 - bearing2);
               if (angleDiff > 180) angleDiff = 360 - angleDiff;
               
+              // Pokud je změna směru větší než 30°, považujeme to za zatáčku nebo křižovatku
               if (angleDiff > 30) {
                   foundTurn = true;
                   break;
               }
           }
 
-          // Smart Zoom Logic
+          // Smart Zoom algoritmus:
+          // Pokud je před námi zatáčka do 100 metrů, automaticky přiblížíme mapu (zoom 18)
+          // na detail křižovatky. V opačném případě oddálíme na přehledný zoom 15.
           if (foundTurn && distToNextTurn < 100) {
-              setMapZoom(18); // Zoom in for the turn
+              setMapZoom(18);
           } else {
-              setMapZoom(15); // Zoom out for straight paths
+              setMapZoom(15);
           }
         } catch (e) {
-           // silently fallback
+           // V případě chyby (např. nekonzistentní data trasy) ponecháme základní zoom
         }
       }
     } else {

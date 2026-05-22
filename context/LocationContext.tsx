@@ -48,6 +48,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
     return granted;
   };
 
+  // Zpracování nových souřadnic (z GPS telefonu nebo Bluetooth modulu Babetty)
   const processLocation = useCallback((
       lat: number, 
       lon: number, 
@@ -58,30 +59,34 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
       const now = Date.now();
       let finalSpeed = Math.max(0, speedKmh);
       
-      // Advanced GPS Drift Filter
-      // If accuracy is terrible, don't trust the speed
+      // Pokročilá filtrace chyb GPS (GPS Drift Filter)
+      // Pokud je nepřesnost signálu příliš vysoká (více než 30 metrů), rychlosti nevěříme a nastavíme 0.
       if (accuracy && accuracy > 30) {
           finalSpeed = 0;
       } else if (lastPosRef.current) {
+          // Vytvoříme body pro knihovnu Turf k výpočtu vzdálenosti
           const p1 = turf.point([lastPosRef.current.lon, lastPosRef.current.lat]);
           const p2 = turf.point([lon, lat]);
-          // Distance in meters
+          
+          // Výpočet fyzické vzdálenosti mezi body v metrech
           const distMeters = distance(p1, p2, { units: "kilometers" }) * 1000;
+          
+          // Časový rozdíl od posledního měření v sekundách
           const timeDiffSec = (now - lastPosRef.current.time) / 1000;
           
           if (timeDiffSec > 0) {
-              // Calculate real physical speed from distance and time
+              // Výpočet reálné rychlosti: dráha (m) / čas (s) převedeno na km/h (* 3.6)
               const calculatedSpeedKmh = (distMeters / timeDiffSec) * 3.6;
               
-              // If the OS reports we are moving e.g. 4 km/h, but physically 
-              // the coordinates only moved 0.5 meters in 2 seconds, it's just GPS drift.
-              // We force speed to 0. But if we physically moved 2 meters (e.g. 7 km/h calculated 
-              // or walking), we allow the low speed.
+              // Eliminace statického driftu:
+              // Pokud telefon hlásí pohyb (např. 4 km/h), ale fyzicky se souřadnice posunuly o méně než 1 metr,
+              // jde pouze o odchylku GPS signálu na místě. Rychlost vynutíme na 0 km/h.
               if (calculatedSpeedKmh < 1.0 || (finalSpeed > 0 && distMeters < 1.0)) {
                  finalSpeed = 0;
               }
           }
 
+          // Aktualizace stavu polohy
           setLocation({
               latitude: lat,
               longitude: lon,
@@ -89,6 +94,8 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
               accuracy: accuracy != null ? accuracy : undefined,
               heading: heading != null ? heading : undefined,
           });
+          
+          // Aktualizace celkové maximální rychlosti
           if (finalSpeed > 0) {
               setMaxSpeed((prev) => Math.max(prev, finalSpeed));
           }
@@ -96,7 +103,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
           return;
       }
 
-      // First location update
+      // První inicializační poloha po zapnutí
       setLocation({
           latitude: lat,
           longitude: lon,
@@ -110,6 +117,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
       lastPosRef.current = { lat, lon, time: now };
   }, []);
 
+  // Metoda volaná z BLE hooku pro aktualizaci dat z externího ESP32 modulu
   const updateFromBLE = useCallback((lat: number, lon: number, speed: number) => {
       processLocation(lat, lon, speed);
   }, [processLocation]);
