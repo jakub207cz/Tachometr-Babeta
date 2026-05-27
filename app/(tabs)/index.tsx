@@ -26,7 +26,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right", "bottom"]}>
-      {/* Header */}
+      {/* Záhlaví */}
       <View style={styles.header}>
         <Pressable onPress={handleStandalone}>
           <Image
@@ -38,9 +38,9 @@ export default function HomeScreen() {
         <Text style={styles.title}>BABETTA TACHOMETR</Text>
       </View>
 
-      {/* Mode Buttons */}
+      {/* Tlačítka režimu */}
       <View style={styles.buttonsContainer}>
-        {/* BLE Mode */}
+        {/* Režim BE */}
         <Pressable
           onPress={handleBLE}
           style={({ pressed }) => [
@@ -62,7 +62,7 @@ export default function HomeScreen() {
         </Pressable>
       </View>
 
-      {/* Footer */}
+      {/* Zápatí */}
       <Text style={styles.version}>v1.0.0 · Babetta Tachometr</Text>
     </SafeAreaView>
   );

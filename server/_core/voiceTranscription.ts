@@ -1,14 +1,14 @@
 /**
- * Voice transcription helper using internal Speech-to-Text service
+ * Pomocník pro přepis hlasu pomocí interní služby Speech-to-Text
  *
- * Frontend implementation guide:
- * 1. Capture audio using MediaRecorder API
- * 2. Upload audio to storage (e.g., S3) to get URL
- * 3. Call transcription with the URL
+ * Průvodce implementací frontendu:
+ * 1. Zachyťte zvuk pomocí MediaRecorder API
+ * 2. Nahrajte zvuk do úložiště (např. S3), abyste získali adresu URL
+ * 3. Přepis hovoru s URL
  *
- * Example usage:
+ * Příklad použití:
  * ```tsx
- * // Frontend component
+ * // Komponenta frontendu
  * const transcribeMutation = trpc.voice.transcribe.useMutation({
  *   onSuccess: (data) => {
  *     console.log(data.text); // Full transcription
@@ -17,23 +17,23 @@
  *   }
  * });
  *
- * // After uploading audio to storage
+ * // Po nahrání zvuku do úložiště
  * transcribeMutation.mutate({
  *   audioUrl: uploadedAudioUrl,
- *   language: 'en', // optional
- *   prompt: 'Transcribe the meeting' // optional
+ *   jazyk: 'en', // volitelné
+ *   prompt: 'Přepis schůzky' // volitelné
  * });
  * ```
  */
 import { ENV } from "./env";
 
 export type TranscribeOptions = {
-  audioUrl: string; // URL to the audio file (e.g., S3 URL)
-  language?: string; // Optional: specify language code (e.g., "en", "es", "zh")
-  prompt?: string; // Optional: custom prompt for the transcription
+  audioUrl: string; // Adresa URL zvukového souboru (např. S3 URL)
+  language?: string; // Volitelné: zadejte kód jazyka (např. „en“, „es“, „zh“)
+  prompt?: string; // Volitelné: vlastní výzva k přepisu
 };
 
-// Native Whisper API segment format
+// Formát segmentu Native Whisper API
 export type WhisperSegment = {
   id: number;
   seek: number;
@@ -47,7 +47,7 @@ export type WhisperSegment = {
   no_speech_prob: number;
 };
 
-// Native Whisper API response format
+// Formát odpovědi Native Whisper API
 export type WhisperResponse = {
   task: "transcribe";
   language: string;
@@ -56,7 +56,7 @@ export type WhisperResponse = {
   segments: WhisperSegment[];
 };
 
-export type TranscriptionResponse = WhisperResponse; // Return native Whisper API response directly
+export type TranscriptionResponse = WhisperResponse; // Vraťte nativní odpověď Whisper API přímo
 
 export type TranscriptionError = {
   error: string;
@@ -70,16 +70,16 @@ export type TranscriptionError = {
 };
 
 /**
- * Transcribe audio to text using the internal Speech-to-Text service
+ * Přepis zvuku na text pomocí interní služby Speech-to-Text
  *
- * @param options - Audio data and metadata
- * @returns Transcription result or error
+ * @param options -  Zvuková data a metadata
+ * @returns  Výsledek nebo chyba přepisu
  */
 export async function transcribeAudio(
   options: TranscribeOptions,
 ): Promise<TranscriptionResponse | TranscriptionError> {
   try {
-    // Step 1: Validate environment configuration
+    // Krok 1: Ověřte konfiguraci prostředí
     if (!ENV.forgeApiUrl) {
       return {
         error: "Voice transcription service is not configured",
@@ -95,7 +95,7 @@ export async function transcribeAudio(
       };
     }
 
-    // Step 2: Download audio from URL
+    // Krok 2: Stáhněte si zvuk z adresy URL
     let audioBuffer: Buffer;
     let mimeType: string;
     try {
@@ -111,7 +111,7 @@ export async function transcribeAudio(
       audioBuffer = Buffer.from(await response.arrayBuffer());
       mimeType = response.headers.get("content-type") || "audio/mpeg";
 
-      // Check file size (16MB limit)
+      // Zkontrolujte velikost souboru (limit 16 MB)
       const sizeMB = audioBuffer.length / (1024 * 1024);
       if (sizeMB > 16) {
         return {
@@ -128,10 +128,10 @@ export async function transcribeAudio(
       };
     }
 
-    // Step 3: Create FormData for multipart upload to Whisper API
+    // Krok 3: Vytvořte FormData pro vícedílné nahrání do Whisper API
     const formData = new FormData();
 
-    // Create a Blob from the buffer and append to form
+    // Vytvořte objekt blob z vyrovnávací paměti a připojte jej k formuláři
     const filename = `audio.${getFileExtension(mimeType)}`;
     const audioBlob = new Blob([new Uint8Array(audioBuffer)], { type: mimeType });
     formData.append("file", audioBlob, filename);
@@ -139,7 +139,7 @@ export async function transcribeAudio(
     formData.append("model", "whisper-1");
     formData.append("response_format", "verbose_json");
 
-    // Add prompt - use custom prompt if provided, otherwise generate based on language
+    // Přidat výzvu – použijte vlastní výzvu, pokud je k dispozici, jinak generuje na základě jazyka
     const prompt =
       options.prompt ||
       (options.language
@@ -147,7 +147,7 @@ export async function transcribeAudio(
         : "Transcribe the user's voice to text");
     formData.append("prompt", prompt);
 
-    // Step 4: Call the transcription service
+    // Krok 4: Zavolejte přepisovací službu
     const baseUrl = ENV.forgeApiUrl.endsWith("/") ? ENV.forgeApiUrl : `${ENV.forgeApiUrl}/`;
 
     const fullUrl = new URL("v1/audio/transcriptions", baseUrl).toString();
@@ -170,10 +170,10 @@ export async function transcribeAudio(
       };
     }
 
-    // Step 5: Parse and return the transcription result
+    // Krok 5: Analyzujte a vraťte výsledek přepisu
     const whisperResponse = (await response.json()) as WhisperResponse;
 
-    // Validate response structure
+    // Ověřte strukturu odpovědi
     if (!whisperResponse.text || typeof whisperResponse.text !== "string") {
       return {
         error: "Invalid transcription response",
@@ -182,9 +182,9 @@ export async function transcribeAudio(
       };
     }
 
-    return whisperResponse; // Return native Whisper API response directly
+    return whisperResponse; // Vraťte nativní odpověď Whisper API přímo
   } catch (error) {
-    // Handle unexpected errors
+    // Řešit neočekávané chyby
     return {
       error: "Voice transcription failed",
       code: "SERVICE_ERROR",
@@ -194,7 +194,7 @@ export async function transcribeAudio(
 }
 
 /**
- * Helper function to get file extension from MIME type
+ * Pomocná funkce pro získání přípony souboru z typu MIME
  */
 function getFileExtension(mimeType: string): string {
   const mimeToExt: Record<string, string> = {
@@ -212,7 +212,7 @@ function getFileExtension(mimeType: string): string {
 }
 
 /**
- * Helper function to get full language name from ISO code
+ * Pomocná funkce pro získání úplného názvu jazyka z kódu ISO
  */
 function getLanguageName(langCode: string): string {
   const langMap: Record<string, string> = {
@@ -241,37 +241,37 @@ function getLanguageName(langCode: string): string {
 }
 
 /**
- * Example tRPC procedure implementation:
+ * Příklad implementace procedury tRPC:
  *
  * ```ts
- * // In server/routers.ts
+ * // V server/routers.ts
  * import { transcribeAudio } from "./_core/voiceTranscription";
  *
  * export const voiceRouter = router({
- *   transcribe: protectedProcedure
+ *   přepis: protectedProcedure
  *     .input(z.object({
  *       audioUrl: z.string(),
- *       language: z.string().optional(),
- *       prompt: z.string().optional(),
+ *       jazyk: z.string().nepovinné(),
+ *       výzva: z.string().nepovinné(),
  *     }))
  *     .mutation(async ({ input, ctx }) => {
  *       const result = await transcribeAudio(input);
  *
- *       // Check if it's an error
- *       if ('error' in result) {
- *         throw new TRPCError({
- *           code: 'BAD_REQUEST',
- *           message: result.error,
- *           cause: result,
+ *       Error 500 (Server Error)!!1500.That’s an error.There was an error. Please try again later.That’s all we know.
+ *       if (výsledek 'chyba') {
+ *         hodit novou TRPCError({
+ *           kód: 'BAD_REQUEST',
+ *           zpráva: result.error,
+ *           příčina: výsledek,
  *         });
  *       }
  *
- *       // Optionally save transcription to database
+ *       // Volitelně uložit přepis do databáze
  *       await db.insert(transcriptions).values({
  *         userId: ctx.user.id,
- *         text: result.text,
- *         duration: result.duration,
- *         language: result.language,
+ *         text: vysledek.text,
+ *         trvání: result.duration,
+ *         jazyk: result.language,
  *         audioUrl: input.audioUrl,
  *         createdAt: new Date(),
  *       });

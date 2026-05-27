@@ -1,6 +1,6 @@
 /**
- * Thin re-exports so consumers don't need to know about internal theme plumbing.
- * Full implementation lives in lib/_core/theme.ts.
+ * Tenký reexport, takže spotřebitelé nepotřebují vědět o interních tématických instalacích.
+ * Plná implementace žije v lib/_core/theme.ts.
  */
 export {
   Colors,

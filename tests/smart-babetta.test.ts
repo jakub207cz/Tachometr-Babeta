@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-// ── Test: OSRM polyline decoder ──────────────────────────────────────────────
+// ── Test: OSRM polyline dekodér ──────────────────────────────────────────────
 function decodePolyline(encoded: string): { latitude: number; longitude: number }[] {
   const points: { latitude: number; longitude: number }[] = [];
   let index = 0;
@@ -44,14 +44,14 @@ function formatDuration(seconds: number | null): string {
   return `${h}h ${m}m`;
 }
 
-// ── Test: formatDistance ─────────────────────────────────────────────────────
+// ── Test: formátVzdálenost ─────────────────────────────────────────────────────
 function formatDistance(meters: number | null): string {
   if (meters == null) return "--";
   if (meters < 1000) return `${Math.round(meters)} m`;
   return `${(meters / 1000).toFixed(1)} km`;
 }
 
-// ── Test: speed conversion ───────────────────────────────────────────────────
+// ── Test: převod rychlosti ───────────────────────────────────────────────────
 function msToKmh(speedMs: number): number {
   return Math.max(0, speedMs * 3.6);
 }
@@ -59,7 +59,7 @@ function msToKmh(speedMs: number): number {
 describe("Smart Babetta — Core Utilities", () => {
   describe("OSRM Polyline Decoder", () => {
     it("decodes a simple encoded polyline", () => {
-      // Known encoded polyline for Paris area
+      // Známá kódovaná křivka pro oblast Paříže
       const encoded = "_p~iF~ps|U_ulLnnqC_mqNvxq`@";
       const points = decodePolyline(encoded);
       expect(points.length).toBe(3);
@@ -73,7 +73,7 @@ describe("Smart Babetta — Core Utilities", () => {
     });
 
     it("decodes single point", () => {
-      // Encoded point for lat=48.8566, lon=2.3522 (Paris)
+      // Kódovaný bod pro lat=48,8566, lon=2,3522 (Paříž)
       const encoded = "yy`|HkiuM";
       const points = decodePolyline(encoded);
       expect(points.length).toBe(1);

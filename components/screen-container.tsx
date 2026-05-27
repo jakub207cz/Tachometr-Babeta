@@ -5,35 +5,35 @@ import { cn } from "@/lib/utils";
 
 export interface ScreenContainerProps extends ViewProps {
   /**
-   * SafeArea edges to apply. Defaults to ["top", "left", "right"].
-   * Bottom is typically handled by Tab Bar.
+   * Okraje SafeArea k použití. Výchozí nastavení je ["top", "left", "right"].
+   * Spodní část je obvykle ovládána panelem karet.
    */
   edges?: Edge[];
   /**
-   * Tailwind className for the content area.
+   * Název třídy Tailwind pro oblast obsahu.
    */
   className?: string;
   /**
-   * Additional className for the outer container (background layer).
+   * Další název třídy pro vnější kontejner (vrstva pozadí).
    */
   containerClassName?: string;
   /**
-   * Additional className for the SafeAreaView (content layer).
+   * Další název třídy pro SafeAreaView (vrstva obsahu).
    */
   safeAreaClassName?: string;
 }
 
 /**
- * A container component that properly handles SafeArea and background colors.
+ * Komponenta kontejneru, která správně zpracovává SafeArea a barvy pozadí.
  *
- * The outer View extends to full screen (including status bar area) with the background color,
- * while the inner SafeAreaView ensures content is within safe bounds.
+ * Vnější pohled se rozšíří na celou obrazovku (včetně oblasti stavového řádku) s barvou pozadí,
+ * zatímco vnitřní SafeAreaView zajišťuje, že obsah je v bezpečných mezích.
  *
- * Usage:
+ * Používání:
  * ```tsx
  * <ScreenContainer className="p-4">
  *   <Text className="text-2xl font-bold text-foreground">
- *     Welcome
+ *     Vítejte
  *   </Text>
  * </ScreenContainer>
  * ```

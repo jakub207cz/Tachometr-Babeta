@@ -41,7 +41,7 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
   const [connectedDevice, setConnectedDevice] = useState<BLEDevice | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // BLE manager is lazily initialized on native only
+  // Správce BLE je líně inicializován pouze na nativním
   const managerRef = useRef<any>(null);
   const scanTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const permissionsCheckedRef = useRef(false);
@@ -61,7 +61,7 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   /**
-   * Request location permissions (required for BLE on Android 12+)
+   * Požádat o oprávnění k poloze (vyžadováno pro BLE na Androidu 12+)
    */
   const requestLocationPermission = useCallback(async (): Promise<boolean> => {
     if (Platform.OS !== "android") return true;
@@ -75,14 +75,14 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   /**
-   * Check if BLE adapter is available and enabled
+   * Zkontrolujte, zda je k dispozici a povolen adaptér BLE
    */
   const checkBLEAdapter = useCallback(async (): Promise<boolean> => {
     const manager = getBLEManager();
     if (!manager) return false;
 
     try {
-      // Check if Bluetooth is enabled
+      // Zkontrolujte, zda je povoleno Bluetooth
       const state = await manager.state();
       console.log("BLE adapter state:", state);
       return state === "PoweredOn";
@@ -93,7 +93,7 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
   }, [getBLEManager]);
 
   /**
-   * Request all necessary permissions and verify BLE adapter
+   * Vyžádejte si všechna potřebná oprávnění a ověřte adaptér BLE
    */
   const requestPermissionsAndVerifyAdapter = useCallback(async (): Promise<boolean> => {
     if (Platform.OS === "web") {
@@ -101,21 +101,21 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
 
-    // Request location permission (required for BLE scan on Android 12+)
+    // Požádat o povolení k poloze (vyžadováno pro skenování BLE v systému Android 12+)
     const locationGranted = await requestLocationPermission();
     if (!locationGranted) {
       setErrorMessage("Pro vyhledávání Bluetooth je vyžadováno povolení k polohovým službám.");
       return false;
     }
 
-    // Request BLE runtime permissions for Android 12+
+    // Požádejte o oprávnění BLE runtime pro Android 12+
     const bleGranted = await requestBLEPermissions();
     if (!bleGranted) {
       setErrorMessage("Pro vyhledávání zařízení jsou vyžadována oprávnění k Bluetooth.");
       return false;
     }
 
-    // Check if BLE adapter is available and enabled
+    // Zkontrolujte, zda je k dispozici a povolen adaptér BLE
     const adapterReady = await checkBLEAdapter();
     if (!adapterReady) {
       setErrorMessage("Bluetooth adaptér není k dispozici nebo je vypnutý. Zapněte prosím Bluetooth.");

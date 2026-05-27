@@ -5,7 +5,7 @@ const config = getDefaultConfig(__dirname);
 
 module.exports = withNativeWind(config, {
   input: "./global.css",
-  // Force write CSS to file system instead of virtual modules
-  // This fixes iOS styling issues in development mode
+  // Vynutit zápis CSS do systému souborů namísto virtuálních modulů
+  // To opravuje problémy se stylizací iOS ve vývojovém režimu
   forceWriteFileSystem: true,
 });

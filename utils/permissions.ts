@@ -2,7 +2,7 @@ import { Platform } from "react-native";
 import * as Location from "expo-location";
 
 /**
- * Request location permissions for GPS mode
+ * Vyžádejte si oprávnění k poloze pro režim GPS
  */
 export async function requestLocationPermissions(): Promise<boolean> {
   try {
@@ -15,7 +15,7 @@ export async function requestLocationPermissions(): Promise<boolean> {
 }
 
 /**
- * Check if location permissions are already granted
+ * Zkontrolujte, zda jsou již udělena oprávnění k poloze
  */
 export async function checkLocationPermissions(): Promise<boolean> {
   try {
@@ -28,19 +28,19 @@ export async function checkLocationPermissions(): Promise<boolean> {
 }
 
 /**
- * Request BLE permissions for Android 12+
- * On iOS, BLE permissions are handled automatically by the system
+ * Požádejte o oprávnění BLE pro Android 12+
+ * V systému iOS jsou oprávnění BLE zpracovávána automaticky systémem
  */
 export async function requestBLEPermissions(): Promise<boolean> {
   if (Platform.OS !== "android") {
-    // iOS handles BLE permissions automatically
+    // iOS zpracovává oprávnění BLE automaticky
     return true;
   }
 
   try {
     const { PermissionsAndroid } = require("react-native");
 
-    // Android 12+ requires explicit runtime permissions for BLE
+    // Android 12+ vyžaduje explicitní oprávnění k běhu pro BLE
     if (Platform.Version >= 31) {
       const granted = await PermissionsAndroid.requestMultiple([
         PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
@@ -51,7 +51,7 @@ export async function requestBLEPermissions(): Promise<boolean> {
         granted["android.permission.BLUETOOTH_CONNECT"] === PermissionsAndroid.RESULTS.GRANTED
       );
     } else {
-      // Android 11 and lower requires location for BLE scanning
+      // Android 11 a nižší vyžaduje umístění pro skenování BLE
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
       );
@@ -64,7 +64,7 @@ export async function requestBLEPermissions(): Promise<boolean> {
 }
 
 /**
- * Check if all required permissions are granted
+ * Zkontrolujte, zda jsou udělena všechna požadovaná oprávnění
  */
 export async function checkAllPermissions(): Promise<{
   location: boolean;

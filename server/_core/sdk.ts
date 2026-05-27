@@ -14,7 +14,7 @@ import type {
   GetUserInfoWithJwtRequest,
   GetUserInfoWithJwtResponse,
 } from "./types/manusTypes";
-// Utility function
+// Užitková funkce
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === "string" && value.length > 0;
 
@@ -98,7 +98,7 @@ class SDKServer {
   }
 
   /**
-   * Exchange OAuth authorization code for access token
+   * Vyměňte autorizační kód OAuth za přístupový token
    * @example
    * const tokenResponse = await sdk.exchangeCodeForToken(code, state);
    */
@@ -107,7 +107,7 @@ class SDKServer {
   }
 
   /**
-   * Get user information using access token
+   * Získejte informace o uživatelích pomocí přístupového tokenu
    * @example
    * const userInfo = await sdk.getUserInfo(tokenResponse.accessToken);
    */
@@ -141,7 +141,7 @@ class SDKServer {
   }
 
   /**
-   * Create a session token for a Manus user openId
+   * Vytvořte token relace pro uživatele Manus openId
    * @example
    * const sessionToken = await sdk.createSessionToken(userInfo.openId);
    */
@@ -232,7 +232,7 @@ class SDKServer {
   }
 
   async authenticateRequest(req: Request): Promise<User> {
-    // Regular authentication flow
+    // Pravidelný tok ověřování
     const authHeader = req.headers.authorization || req.headers.Authorization;
     let token: string | undefined;
     if (typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
@@ -251,7 +251,7 @@ class SDKServer {
     const signedInAt = new Date();
     let user = await db.getUserByOpenId(sessionUserId);
 
-    // If user not in DB, sync from OAuth server automatically
+    // Pokud uživatel není v DB, automaticky se synchronizuje ze serveru OAuth
     if (!user) {
       try {
         const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");

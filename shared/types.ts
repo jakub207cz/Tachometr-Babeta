@@ -1,6 +1,6 @@
 /**
- * Unified type exports
- * Import shared types from this single entry point.
+ * Exporty jednotného typu
+ * Import sdílených typů z tohoto jediného vstupního bodu.
  */
 
 export type * from "../drizzle/schema";

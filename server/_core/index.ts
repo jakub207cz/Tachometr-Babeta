@@ -30,7 +30,7 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
 
-  // Enable CORS for all routes - reflect the request origin to support credentials
+  // Povolit CORS pro všechny trasy – odrážet původ požadavku na podporu přihlašovacích údajů
   app.use((req, res, next) => {
     const origin = req.headers.origin;
     if (origin) {
@@ -43,7 +43,7 @@ async function startServer() {
     );
     res.header("Access-Control-Allow-Credentials", "true");
 
-    // Handle preflight requests
+    // Vyřizovat požadavky před výstupem
     if (req.method === "OPTIONS") {
       res.sendStatus(200);
       return;

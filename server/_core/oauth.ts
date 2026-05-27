@@ -83,8 +83,8 @@ export function registerOAuthRoutes(app: Express) {
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
-      // Redirect to the frontend URL (Expo web on port 8081)
-      // Cookie is set with parent domain so it works across both 3000 and 8081 subdomains
+      // Přesměrování na frontend URL (expo web na portu 8081)
+      // Soubor cookie je nastaven s nadřazenou doménou, takže funguje napříč subdoménami 3000 i 8081
       const frontendUrl =
         process.env.EXPO_WEB_PREVIEW_URL ||
         process.env.EXPO_PACKAGER_PROXY_URL ||
@@ -134,7 +134,7 @@ export function registerOAuthRoutes(app: Express) {
     res.json({ success: true });
   });
 
-  // Get current authenticated user - works with both cookie (web) and Bearer token (mobile)
+  // Získejte aktuálního ověřeného uživatele – funguje jak s cookie (web), tak s tokenem nosiče (mobil)
   app.get("/api/auth/me", async (req: Request, res: Response) => {
     try {
       const user = await sdk.authenticateRequest(req);
@@ -145,15 +145,15 @@ export function registerOAuthRoutes(app: Express) {
     }
   });
 
-  // Establish session cookie from Bearer token
-  // Used by iframe preview: frontend receives token via postMessage, then calls this endpoint
-  // to get a proper Set-Cookie response from the backend (3000-xxx domain)
+  // Vytvořte soubor cookie relace z tokenu nosiče
+  // Používáno náhledem iframe: frontend obdrží token prostřednictvím postMessage a poté zavolá tento koncový bod
+  // získat správnou odpověď Set-Cookie z backendu (doména 3000-xxx)
   app.post("/api/auth/session", async (req: Request, res: Response) => {
     try {
-      // Authenticate using Bearer token from Authorization header
+      // Ověření pomocí tokenu nosiče z hlavičky Autorizace
       const user = await sdk.authenticateRequest(req);
 
-      // Get the token from the Authorization header to set as cookie
+      // Získejte token z hlavičky Authorization a nastavte jej jako soubor cookie
       const authHeader = req.headers.authorization || req.headers.Authorization;
       if (typeof authHeader !== "string" || !authHeader.startsWith("Bearer ")) {
         res.status(400).json({ error: "Bearer token required" });
@@ -161,7 +161,7 @@ export function registerOAuthRoutes(app: Express) {
       }
       const token = authHeader.slice("Bearer ".length).trim();
 
-      // Set cookie for this domain (3000-xxx)
+      // Nastavit soubor cookie pro tuto doménu (3000-xxx)
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, token, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 

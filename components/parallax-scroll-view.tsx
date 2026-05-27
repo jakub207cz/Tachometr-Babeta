@@ -18,8 +18,8 @@ type Props = PropsWithChildren<{
 }>;
 
 /**
- * A scroll view with parallax header effect.
- * Note: Animated components require style objects for dynamic animations.
+ * Posouvací pohled s efektem paralaxy.
+ * Note: Animované komponenty vyžadují pro dynamické animace objekty stylu.
  */
 export default function ParallaxScrollView({
   children,

@@ -19,7 +19,7 @@ export function Speedometer({ speed }: SpeedometerProps) {
     displayRef.current = displaySpeed;
   }, [displaySpeed]);
 
-  // Format speed without leading zeros for perfect centering
+  // Rychlost formátování bez úvodních nul pro dokonalé vystředění
   const speedStr = displaySpeed.toString();
 
   return (
@@ -28,7 +28,7 @@ export function Speedometer({ speed }: SpeedometerProps) {
         <Text style={styles.speedDigits}>{speedStr}</Text>
       </View>
       <Text style={styles.unit}>km/h</Text>
-      {/* Speed bar indicator */}
+      {/* Indikátor rychlosti */}
       <View style={styles.barContainer}>
         <View
           style={[

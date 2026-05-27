@@ -2,10 +2,10 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 /**
- * Combines class names using clsx and tailwind-merge.
- * This ensures Tailwind classes are properly merged without conflicts.
+ * Kombinuje názvy tříd pomocí clsx a tailwind-merge.
+ * To zajišťuje, že třídy Tailwind jsou správně sloučeny bez konfliktů.
  *
- * Usage:
+ * Používání:
  * ```tsx
  * cn("px-4 py-2", isActive && "bg-primary", className)
  * ```

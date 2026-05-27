@@ -6,30 +6,30 @@ import { getApiBaseUrl } from "@/constants/oauth";
 import * as Auth from "@/lib/_core/auth";
 
 /**
- * tRPC React client for type-safe API calls.
+ * Klient tRPC React pro typově bezpečná volání API.
  *
- * IMPORTANT (tRPC v11): The `transformer` must be inside `httpBatchLink`,
- * NOT at the root createClient level. This ensures client and server
- * use the same serialization format (superjson).
+ * DŮLEŽITÉ (tRPC v11): „Transformátor“ musí být uvnitř „httpBatchLink“,
+ * NE na úrovni root createClient. Tím je zajištěn klient i server
+ * použijte stejný formát serializace (superjson).
  */
 export const trpc = createTRPCReact<AppRouter>();
 
 /**
- * Creates the tRPC client with proper configuration.
- * Call this once in your app's root layout.
+ * Vytvoří klienta tRPC se správnou konfigurací.
+ * Zavolejte to jednou v kořenovém rozložení aplikace.
  */
 export function createTRPCClient() {
   return trpc.createClient({
     links: [
       httpBatchLink({
         url: `${getApiBaseUrl()}/api/trpc`,
-        // tRPC v11: transformer MUST be inside httpBatchLink, not at root
+        // tRPC v11: transformátor MUSÍ být uvnitř httpBatchLink, ne v rootu
         transformer: superjson,
         async headers() {
           const token = await Auth.getSessionToken();
           return token ? { Authorization: `Bearer ${token}` } : {};
         },
-        // Custom fetch to include credentials for cookie-based auth
+        // Vlastní načtení pro zahrnutí přihlašovacích údajů pro ověřování založené na souborech cookie
         fetch(url, options) {
           return fetch(url, {
             ...options,

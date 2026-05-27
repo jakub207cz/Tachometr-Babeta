@@ -37,7 +37,7 @@ export default function RootLayout() {
   const [insets, setInsets] = useState<EdgeInsets>(initialInsets);
   const [frame, setFrame] = useState<Rect>(initialFrame);
 
-  // Initialize Manus runtime for cookie injection from parent container
+  // Inicializujte runtime Manus pro vkládání souborů cookie z nadřazeného kontejneru
   useEffect(() => {
     initManusRuntime();
   }, []);
@@ -53,15 +53,15 @@ export default function RootLayout() {
     return () => unsubscribe();
   }, [handleSafeAreaUpdate]);
 
-  // Create clients once and reuse them
+  // Vytvořte klienty jednou a znovu je použijte
   const [queryClient] = useState(
     () =>
       new QueryClient({
         defaultOptions: {
           queries: {
-            // Disable automatic refetching on window focus for mobile
+            // Zakázat automatické opětovné načítání při zaměření okna pro mobily
             refetchOnWindowFocus: false,
-            // Retry failed requests once
+            // Zkuste jednou neúspěšné požadavky
             retry: 1,
           },
         },
@@ -69,7 +69,7 @@ export default function RootLayout() {
   );
   const [trpcClient] = useState(() => createTRPCClient());
 
-  // Ensure minimum 8px padding for top and bottom on mobile
+  // Zajistěte minimálně 8px odsazení pro horní a spodní část na mobilu
   const providerInitialMetrics = useMemo(() => {
     const metrics = initialWindowMetrics ?? { insets: initialInsets, frame: initialFrame };
     return {
@@ -90,9 +90,9 @@ export default function RootLayout() {
             <NavigationProvider>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
-          {/* Default to hiding native headers so raw route segments don't appear (e.g. "(tabs)", "products/[id]"). */}
-          {/* If a screen needs the native header, explicitly enable it and set a human title via Stack.Screen options. */}
-          {/* in order for ios apps tab switching to work properly, use presentation: "fullScreenModal" for login page, whenever you decide to use presentation: "modal*/}
+          {/* Ve výchozím nastavení jsou nativní záhlaví skryta, aby se nezobrazovaly nezpracované segmenty trasy (např. „(karty)“, „produkty/[id]“). */}
+          {/* Pokud obrazovka potřebuje nativní záhlaví, explicitně jej povolte a nastavte lidský titul pomocí voleb Stack.Screen. */}
+          {/* aby přepínání karet aplikací ios fungovalo správně, použijte prezentaci: "fullScreenModal" pro přihlašovací stránku, kdykoli se rozhodnete použít prezentaci: "modal*/}
           <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#000000" } }}>
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="oauth/callback" />

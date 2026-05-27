@@ -2,8 +2,8 @@ import { Colors, type ColorScheme, type ThemeColorPalette } from "@/constants/th
 import { useColorScheme } from "./use-color-scheme";
 
 /**
- * Returns the current theme's color palette.
- * Usage: const colors = useColors(); then colors.text, colors.background, etc.
+ * Vrátí paletu barev aktuálního motivu.
+ * Použití: const colors = useColors(); dále barvy.text, barvy.pozadí atd.
  */
 export function useColors(colorSchemeOverride?: ColorScheme): ThemeColorPalette {
   const colorSchema = useColorScheme();

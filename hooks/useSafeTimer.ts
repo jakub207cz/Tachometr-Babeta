@@ -1,18 +1,18 @@
 import { useRef, useCallback, useEffect } from "react";
 
 /**
- * A safe timer hook that prevents race conditions
- * Automatically cleans up on unmount
+ * Bezpečný časovač, který zabraňuje závodním podmínkám
+ * Automaticky se čistí při odpojení
  */
 export function useSafeTimer() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const setTimer = useCallback((callback: () => void, delay: number) => {
-    // Clear any existing timer
+    // Vymažte všechny existující časovače
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
-    // Set new timer
+    // Nastavte nový časovač
     timerRef.current = setTimeout(() => {
       callback();
       timerRef.current = null;
@@ -35,7 +35,7 @@ export function useSafeTimer() {
     return timerRef.current !== null;
   }, []);
 
-  // Cleanup on unmount
+  // Vyčištění při odpojení
   useEffect(() => {
     return () => {
       if (timerRef.current) {

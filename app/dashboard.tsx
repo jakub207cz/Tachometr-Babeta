@@ -42,9 +42,9 @@ function formatDistance(meters: number | null): string {
 }
 
 export default function DashboardScreen() {
-  // Keep screen awake during navigation session
+  // Udržujte obrazovku vzhůru během relace navigace
   useKeepAwake();
-  // Poll BLE data when in BLE mode
+  // Dotazování dat BLE v režimu BLE
   useBLEData();
 
   const router = useRouter();
@@ -71,11 +71,11 @@ export default function DashboardScreen() {
 
   const connectionColor = isConnected ? "#00E676" : "#FF1744";
 
-  // 10-second auto-follow pause with interaction tracking
+  // 10sekundová pauza automatického sledování se sledováním interakcí
   const handleMapInteraction = useCallback(() => {
     setAutoFollow(false);
     setShowRecenter(true);
-    // 10-second pause before auto-follow resumes
+    // 10sekundová pauza před obnovením automatického sledování
     resetAutoFollowTimer(() => {
       setAutoFollow(true);
       setShowRecenter(false);
@@ -88,7 +88,7 @@ export default function DashboardScreen() {
     }
     setAutoFollow(true);
     setShowRecenter(false);
-    // Restart 10-second timer after manual recenter
+    // Po ručním vycentrování restartujte 10sekundový časovač
     resetAutoFollowTimer(() => {
       setAutoFollow(false);
     }, 10000);
@@ -173,7 +173,7 @@ export default function DashboardScreen() {
               }
           }
 
-          // Smart Zoom algoritmus:
+          // Algoritmus chytrého zoomu:
           // Pokud je před námi zatáčka do 100 metrů, automaticky přiblížíme mapu (zoom 18)
           // na detail křižovatky. V opačném případě oddálíme na přehledný zoom 15.
           if (foundTurn && distToNextTurn < 100) {
@@ -196,7 +196,7 @@ export default function DashboardScreen() {
     <View style={styles.root}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
       <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-        {/* ── Header ── */}
+        {/* ── Záhlaví ── */}
         <View style={styles.header}>
           <Pressable onPress={handleBack} style={styles.backButton}>
             <Text style={styles.backText}>← Zpět</Text>
@@ -209,7 +209,7 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* ── Max Speed Bar (New) ── */}
+        {/* ── Pruh maximální rychlosti (nový) ── */}
         <View style={styles.maxSpeedBar}>
            <Text style={styles.maxSpeedText}>
                <Text style={styles.maxSpeedLabel}>MAX TRASA: </Text>
@@ -221,14 +221,14 @@ export default function DashboardScreen() {
            </Text>
         </View>
 
-        {/* ── Top 30%: Speedometer ── */}
+        {/* ── Top 30 %: Tachometr ── */}
         <View style={styles.speedometerSection}>
           <Speedometer speed={speed} />
         </View>
 
-        {/* ── Middle 20%: Status + Nav Stats ── */}
+        {/* ── Středních 20 %: Stav + Statistiky navigace ── */}
         <View style={styles.statsSection}>
-          {/* Connection status */}
+          {/* Stav připojení */}
           <View style={styles.statusRow}>
             <View style={[styles.statusDot, { backgroundColor: connectionColor }]} />
             <Text style={[styles.statusText, { color: connectionColor }]}>
@@ -236,7 +236,7 @@ export default function DashboardScreen() {
             </Text>
           </View>
 
-          {/* Nav stats */}
+          {/* Nav statistiky */}
           {isNavigating ? (
             <View style={styles.navStats}>
               <View style={styles.navStatItem}>
@@ -259,7 +259,7 @@ export default function DashboardScreen() {
           )}
         </View>
 
-        {/* ── Bottom 50%: Map ── */}
+        {/* ── Dolních 50 %: Mapa ── */}
         <View style={styles.mapSection}>
           <OSMMapView
             latitude={location?.latitude ?? null}
@@ -270,7 +270,7 @@ export default function DashboardScreen() {
             onMapInteraction={handleMapInteraction}
           />
 
-          {/* Re-center FAB */}
+          {/* Znovu vycentrujte FAB */}
           {showRecenter && (
             <Pressable
               onPress={handleRecenter}
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
   },
 
-  // Max Speed Bar
+  // Bar maximální rychlosti
   maxSpeedBar: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === "ios" ? "System" : "sans-serif",
   },
 
-  // Speedometer — top 30%
+  // Tachometr – horních 30 %
   speedometerSection: {
     flex: 3,
     justifyContent: "center",
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#000000",
   },
 
-  // Stats — middle 20%
+  // Statistiky — středních 20 %
   statsSection: {
     flex: 2,
     justifyContent: "center",
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  // Map — bottom 50%
+  // Mapa – spodních 50 %
   mapSection: {
     flex: 5,
     position: "relative",

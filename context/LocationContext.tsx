@@ -16,7 +16,7 @@ export interface LocationData {
 
 interface LocationContextType {
   location: LocationData | null;
-  maxSpeed: number; // Global maximum speed (km/h) across the entire session
+  maxSpeed: number; // Globální maximální rychlost (km/h) během celé relace
   permissionGranted: boolean;
   requestPermission: () => Promise<boolean>;
   updateFromBLE: (lat: number, lon: number, speed: number) => void;
@@ -157,7 +157,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (mode !== "standalone") {
-      // Stop GPS watcher when in BLE mode or no mode
+      // Zastavte sledování GPS v režimu BLE nebo v žádném režimu
       if (watcherRef.current) {
         watcherRef.current.remove();
         watcherRef.current = null;
@@ -172,7 +172,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
       if (!granted || !active) return;
 
       if (Platform.OS === "web") {
-        // Web fallback using browser geolocation
+        // Záložní web pomocí geolokace prohlížeče
         if (navigator.geolocation) {
           navigator.geolocation.watchPosition(
             (pos) => {

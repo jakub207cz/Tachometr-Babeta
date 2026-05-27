@@ -19,7 +19,7 @@ export function useAuth(options?: UseAuthOptions) {
       setLoading(true);
       setError(null);
 
-      // Web platform: use cookie-based auth, fetch user from API
+      // Webová platforma: použijte ověřování založené na souborech cookie, načtěte uživatele z API
       if (Platform.OS === "web") {
         console.log("[useAuth] Web platform: fetching user from API...");
         const apiUser = await Api.getMe();
@@ -35,7 +35,7 @@ export function useAuth(options?: UseAuthOptions) {
             lastSignedIn: new Date(apiUser.lastSignedIn),
           };
           setUser(userInfo);
-          // Cache user info in localStorage for faster subsequent loads
+          // Uložte informace o uživateli do mezipaměti v localStorage pro rychlejší následné načítání
           await Auth.setUserInfo(userInfo);
           console.log("[useAuth] Web user set from API:", userInfo);
         } else {
@@ -46,7 +46,7 @@ export function useAuth(options?: UseAuthOptions) {
         return;
       }
 
-      // Native platform: use token-based auth
+      // Nativní platforma: použijte autentizaci založenou na tokenech
       console.log("[useAuth] Native platform: checking for session token...");
       const sessionToken = await Auth.getSessionToken();
       console.log(
@@ -59,7 +59,7 @@ export function useAuth(options?: UseAuthOptions) {
         return;
       }
 
-      // Use cached user info for native (token validates the session)
+      // Používat informace o uživateli uložené v mezipaměti pro nativní (token ověřuje relaci)
       const cachedUser = await Auth.getUserInfo();
       console.log("[useAuth] Cached user:", cachedUser);
       if (cachedUser) {
@@ -85,7 +85,7 @@ export function useAuth(options?: UseAuthOptions) {
       await Api.logout();
     } catch (err) {
       console.error("[Auth] Logout API call failed:", err);
-      // Continue with logout even if API call fails
+      // Pokračujte v odhlášení, i když volání API selže
     } finally {
       await Auth.removeSessionToken();
       await Auth.clearUserInfo();
@@ -100,11 +100,11 @@ export function useAuth(options?: UseAuthOptions) {
     console.log("[useAuth] useEffect triggered, autoFetch:", autoFetch, "platform:", Platform.OS);
     if (autoFetch) {
       if (Platform.OS === "web") {
-        // Web: fetch user from API directly (user will login manually if needed)
+        // Web: načte uživatele přímo z API (uživatel se v případě potřeby přihlásí ručně)
         console.log("[useAuth] Web: fetching user from API...");
         fetchUser();
       } else {
-        // Native: check for cached user info first for faster initial load
+        // Nativní: Pro rychlejší počáteční načítání nejprve zkontrolujte informace o uživateli uložené v mezipaměti
         Auth.getUserInfo().then((cachedUser) => {
           console.log("[useAuth] Native cached user check:", cachedUser);
           if (cachedUser) {
@@ -112,7 +112,7 @@ export function useAuth(options?: UseAuthOptions) {
             setUser(cachedUser);
             setLoading(false);
           } else {
-            // No cached user, check session token
+            // Žádný uživatel uložený v mezipaměti, zkontrolujte token relace
             fetchUser();
           }
         });

@@ -1,5 +1,5 @@
-// Preconfigured storage helpers for Manus WebDev templates
-// Uses the Biz-provided storage proxy (Authorization: Bearer <token>)
+// Předkonfigurovaní pomocníci úložiště pro šablony Manus WebDev
+// Používá proxy úložiště poskytované společností Biz (autorizace: nosič <token>)
 
 import { ENV } from "./_core/env";
 

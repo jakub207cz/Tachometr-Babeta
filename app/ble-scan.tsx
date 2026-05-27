@@ -81,7 +81,7 @@ export default function BleScanScreen() {
   const isConnecting = connectionState === "connecting";
   const isConnected = connectionState === "connected";
 
-  // Pulse animation when scanning
+  // Pulzní animace při skenování
   useEffect(() => {
     if (isScanning) {
       pulseLoop.current = Animated.loop(
@@ -98,7 +98,7 @@ export default function BleScanScreen() {
     return () => pulseLoop.current?.stop();
   }, [isScanning]);
 
-  // Navigate to dashboard once connected
+  // Po připojení přejděte na řídicí panel
   useEffect(() => {
     if (isConnected && connectedDevice) {
       const timer = setTimeout(() => {
@@ -133,7 +133,7 @@ export default function BleScanScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right", "bottom"]}>
-      {/* Header */}
+      {/* Záhlaví */}
       <View style={styles.header}>
         <Pressable onPress={handleBack} style={styles.backButton}>
           <Text style={styles.backText}>← Zpět</Text>
@@ -142,7 +142,7 @@ export default function BleScanScreen() {
         <View style={{ width: 60 }} />
       </View>
 
-      {/* Scan Button */}
+      {/* Tlačítko skenování */}
       <View style={styles.scanSection}>
         <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
           <Pressable
@@ -170,7 +170,7 @@ export default function BleScanScreen() {
         )}
       </View>
 
-      {/* Status Messages */}
+      {/* Stavové zprávy */}
       {errorMessage != null && (
         <View style={styles.errorBanner}>
           <Text style={styles.errorText}>⚠ {errorMessage}</Text>
@@ -190,7 +190,7 @@ export default function BleScanScreen() {
         </View>
       )}
 
-      {/* Device List */}
+      {/* Seznam zařízení */}
       <View style={styles.listContainer}>
         <Text style={styles.listHeader}>
           {devices.length > 0 ? `NALEZENÁ ZAŘÍZENÍ (${devices.length})` : "NALEZENÁ ZAŘÍZENÍ"}
@@ -223,7 +223,7 @@ export default function BleScanScreen() {
         )}
       </View>
 
-      {/* Platform note */}
+      {/* Poznámka k platformě */}
       {Platform.OS === "web" && (
         <View style={styles.webNote}>
           <Text style={styles.webNoteText}>

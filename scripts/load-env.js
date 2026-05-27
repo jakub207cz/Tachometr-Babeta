@@ -1,7 +1,7 @@
 /**
- * Custom environment loader that prioritizes system environment variables
- * over .env file values. This ensures that Manus platform-injected variables
- * are not overridden by placeholder values in .env
+ * Vlastní zavaděč prostředí, který upřednostňuje systémové proměnné prostředí
+ * přes hodnoty souboru .env. Tím je zajištěno, že platformy Manus vkládají proměnné
+ * nejsou přepsány zástupnými hodnotami v .env
  */
 import fs from "fs";
 import path from "path";
@@ -17,15 +17,15 @@ if (fs.existsSync(envPath)) {
   const lines = envContent.split("\n");
 
   lines.forEach((line) => {
-    // Skip comments and empty lines
+    // Přeskočte komentáře a prázdné řádky
     if (!line || line.trim().startsWith("#")) return;
 
     const match = line.match(/^([^=]+)=(.*)$/);
     if (match) {
       const key = match[1].trim();
-      const value = match[2].trim().replace(/^["']|["']$/g, ""); // Remove quotes
+      const value = match[2].trim().replace(/^["']|["']$/g, ""); // Odstraňte uvozovky
 
-      // Only set if not already defined in environment
+      // Nastavit pouze v případě, že již není definován v prostředí
       if (!process.env[key]) {
         process.env[key] = value;
       }
@@ -33,7 +33,7 @@ if (fs.existsSync(envPath)) {
   });
 }
 
-// Map system variables to Expo public variables
+// Mapujte systémové proměnné na veřejné proměnné Expo
 const mappings = {
   VITE_APP_ID: "EXPO_PUBLIC_APP_ID",
   VITE_OAUTH_PORTAL_URL: "EXPO_PUBLIC_OAUTH_PORTAL_URL",

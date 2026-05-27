@@ -13,13 +13,13 @@ export type User = {
 
 export async function getSessionToken(): Promise<string | null> {
   try {
-    // Web platform uses cookie-based auth, no manual token management needed
+    // Webová platforma používá autentizaci založenou na souborech cookie, není potřeba žádná ruční správa tokenů
     if (Platform.OS === "web") {
       console.log("[Auth] Web platform uses cookie-based auth, skipping token retrieval");
       return null;
     }
 
-    // Use SecureStore for native
+    // Pro nativní použijte SecureStore
     console.log("[Auth] Getting session token...");
     const token = await SecureStore.getItemAsync(SESSION_TOKEN_KEY);
     console.log(
@@ -35,13 +35,13 @@ export async function getSessionToken(): Promise<string | null> {
 
 export async function setSessionToken(token: string): Promise<void> {
   try {
-    // Web platform uses cookie-based auth, no manual token management needed
+    // Webová platforma používá autentizaci založenou na souborech cookie, není potřeba žádná ruční správa tokenů
     if (Platform.OS === "web") {
       console.log("[Auth] Web platform uses cookie-based auth, skipping token storage");
       return;
     }
 
-    // Use SecureStore for native
+    // Pro nativní použijte SecureStore
     console.log("[Auth] Setting session token...", token.substring(0, 20) + "...");
     await SecureStore.setItemAsync(SESSION_TOKEN_KEY, token);
     console.log("[Auth] Session token stored in SecureStore successfully");
@@ -53,13 +53,13 @@ export async function setSessionToken(token: string): Promise<void> {
 
 export async function removeSessionToken(): Promise<void> {
   try {
-    // Web platform uses cookie-based auth, logout is handled by server clearing cookie
+    // Webová platforma používá autentizaci založenou na cookies, odhlášení je řešeno serverem clearing cookie
     if (Platform.OS === "web") {
       console.log("[Auth] Web platform uses cookie-based auth, skipping token removal");
       return;
     }
 
-    // Use SecureStore for native
+    // Pro nativní použijte SecureStore
     console.log("[Auth] Removing session token...");
     await SecureStore.deleteItemAsync(SESSION_TOKEN_KEY);
     console.log("[Auth] Session token removed from SecureStore successfully");
@@ -74,10 +74,10 @@ export async function getUserInfo(): Promise<User | null> {
 
     let info: string | null = null;
     if (Platform.OS === "web") {
-      // Use localStorage for web
+      // Použijte localStorage pro web
       info = window.localStorage.getItem(USER_INFO_KEY);
     } else {
-      // Use SecureStore for native
+      // Pro nativní použijte SecureStore
       info = await SecureStore.getItemAsync(USER_INFO_KEY);
     }
 
@@ -99,13 +99,13 @@ export async function setUserInfo(user: User): Promise<void> {
     console.log("[Auth] Setting user info...", user);
 
     if (Platform.OS === "web") {
-      // Use localStorage for web
+      // Použijte localStorage pro web
       window.localStorage.setItem(USER_INFO_KEY, JSON.stringify(user));
       console.log("[Auth] User info stored in localStorage successfully");
       return;
     }
 
-    // Use SecureStore for native
+    // Pro nativní použijte SecureStore
     await SecureStore.setItemAsync(USER_INFO_KEY, JSON.stringify(user));
     console.log("[Auth] User info stored in SecureStore successfully");
   } catch (error) {
@@ -116,12 +116,12 @@ export async function setUserInfo(user: User): Promise<void> {
 export async function clearUserInfo(): Promise<void> {
   try {
     if (Platform.OS === "web") {
-      // Use localStorage for web
+      // Použijte localStorage pro web
       window.localStorage.removeItem(USER_INFO_KEY);
       return;
     }
 
-    // Use SecureStore for native
+    // Pro nativní použijte SecureStore
     await SecureStore.deleteItemAsync(USER_INFO_KEY);
   } catch (error) {
     console.error("[Auth] Failed to clear user info:", error);

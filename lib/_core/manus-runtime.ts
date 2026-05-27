@@ -1,17 +1,17 @@
 /**
- * Manus Runtime - Communication layer between Expo web app and parent container (next-agent-webapp)
+ * Manus Runtime – Komunikační vrstva mezi webovou aplikací Expo a nadřazeným kontejnerem (next-agent-webapp)
  *
- * Simplified flow:
- * 1. initManusRuntime() called
- * 2. Send 'appDevServerReady' to parent to signal app is ready
+ * Zjednodušený tok:
+ * 1. volána initManusRuntime().
+ * 2. Odešlete 'appDevServerReady' rodičovi, abyste signalizovali, že je aplikace připravena
  *
- * User will manually login via the app's login page - no automatic cookie injection.
+ * Uživatel se přihlásí ručně přes přihlašovací stránku aplikace – žádné automatické vkládání souborů cookie.
  */
 
 import { Platform } from "react-native";
 import type { Metrics } from "react-native-safe-area-context";
 
-// Debug logging with timestamps
+// Ladění protokolování s časovými razítky
 const DEBUG = true;
 const log = (msg: string) => {
   if (!DEBUG) return;
@@ -47,7 +47,7 @@ function isWeb(): boolean {
 }
 
 function sendToParent(type: MessageType, payload: Record<string, unknown> = {}): void {
-  // NOTE: Validate parent origin if we need to transfer sensitive data
+  // NOTE: Pokud potřebujeme přenést citlivá data, ověřte nadřazený původ
   if (!isWeb() || !isInIframe()) return;
 
   const message: SpacePreviewerMessage = {
@@ -71,7 +71,7 @@ function isValidInsets(payload: Record<string, unknown>): payload is SafeAreaIns
 }
 
 function handleMessage(event: MessageEvent<unknown>): void {
-  // NOTE: Validate event.origin if we need to transfer sensitive data
+  // NOTE: Pokud potřebujeme přenést citlivá data, ověřte event.origin
   const data = event.data as SpacePreviewerMessage | undefined;
   if (!data || data.type !== "SpacePreviewerChannel") return;
 
@@ -89,7 +89,7 @@ function handleMessage(event: MessageEvent<unknown>): void {
 }
 
 /**
- * Subscribe to safe area updates from the parent container.
+ * Přihlaste se k odběru aktualizací bezpečné oblasti z nadřazeného kontejneru.
  */
 export function subscribeSafeAreaInsets(callback: SafeAreaCallback): () => void {
   safeAreaCallback = callback;
@@ -101,7 +101,7 @@ export function subscribeSafeAreaInsets(callback: SafeAreaCallback): () => void 
 }
 
 /**
- * Initialize Manus Runtime - just notifies parent that app is ready
+ * Inicializovat Manus Runtime – pouze upozorní rodiče, že aplikace je připravena
  */
 export function initManusRuntime(): void {
   if (!isWeb() || !isInIframe()) return;
@@ -114,7 +114,7 @@ export function initManusRuntime(): void {
 }
 
 /**
- * Check if running inside preview iframe
+ * Zkontrolujte, zda běží v náhledu iframe
  */
 export function isRunningInPreviewIframe(): boolean {
   return isWeb() && isInIframe();

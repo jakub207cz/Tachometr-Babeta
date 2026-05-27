@@ -53,10 +53,10 @@ const validatePayload = (input: NotificationPayload): NotificationPayload => {
 };
 
 /**
- * Dispatches a project-owner notification through the Manus Notification Service.
- * Returns `true` if the request was accepted, `false` when the upstream service
- * cannot be reached (callers can fall back to email/slack). Validation errors
- * bubble up as TRPC errors so callers can fix the payload.
+ * Odešle oznámení vlastníka projektu prostřednictvím služby oznámení Manus.
+ * Vrátí `true`, pokud byl požadavek přijat, `false` při upstreamové službě
+ * nelze zastihnout (volající se mohou vrátit k emailu/slack). Chyby ověření
+ * bublají jako chyby TRPC, takže volající mohou opravit užitečné zatížení.
  */
 export async function notifyOwner(payload: NotificationPayload): Promise<boolean> {
   const { title, content } = validatePayload(payload);

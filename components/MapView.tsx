@@ -94,7 +94,7 @@ function buildMapHTML(lat: number, lon: number): string {
   });
 
   map.on('dragend zoomend', function() {
-    // Reset timer on drag/zoom end
+    // Resetujte časovač na konci přetažení/přiblížení
     lastInteractionTime = Date.now();
     clearTimeout(interactionTimer);
     interactionTimer = setTimeout(function() {
@@ -118,7 +118,7 @@ function buildMapHTML(lat: number, lon: number): string {
   function updatePosition(lat, lon) {
     userMarker.setLatLng([lat, lon]);
     if (autoFollow && !isUserInteracting) {
-      // Smooth animation: 500ms duration
+      // Plynulá animace: trvání 500 ms
       map.setView([lat, lon], currentZoom, { animate: true, duration: 0.5 });
     }
   }
@@ -167,11 +167,11 @@ function buildMapHTML(lat: number, lon: number): string {
     isUserInteracting = false;
     autoFollow = true;
     clearTimeout(interactionTimer);
-    // 1-second smooth animation
+    // 1sekundová plynulá animace
     map.setView([lat, lon], currentZoom, { animate: true, duration: 1.0 });
   }
 
-  // Check if user is currently interacting
+  // Zkontrolujte, zda uživatel aktuálně komunikuje
   function getIsUserInteracting() {
     return isUserInteracting;
   }
